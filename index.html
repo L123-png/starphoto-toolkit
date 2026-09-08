@@ -1,0 +1,1845 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>星光图匠 StarPhoto Toolkit</title>
+  <script src="https://cdn.jsdelivr.net/gh/kilobtye/potrace/potrace.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gifshot/0.3.2/gifshot.min.js"></script>
+  <style>
+    :root {
+      --bg: #050518;
+      --card: rgba(20, 22, 50, 0.65);
+      --text: #e8ecff;
+      --muted: #9aa3c7;
+      --accent1: #00f0ff;
+      --accent2: #bc13fe;
+      --accent3: #ff2a6d;
+      --accent4: #39ff14;
+      --radius: 16px;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      background: radial-gradient(ellipse at top, #1a0b3a 0%, #0a0c28 50%, #000 100%);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    #stars { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+    .star {
+      position: absolute;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 0 4px #fff, 0 0 10px var(--accent1);
+      animation: twinkle var(--dur) ease-in-out infinite;
+      opacity: var(--op);
+    }
+    .shooting {
+      position: absolute;
+      width: 120px;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent1), transparent);
+      transform: rotate(-35deg);
+      animation: shoot 5s linear infinite;
+      opacity: 0;
+      filter: drop-shadow(0 0 6px var(--accent1));
+    }
+    @keyframes twinkle { 0%, 100% { opacity: var(--op); } 50% { opacity: 0.15; } }
+    @keyframes shoot {
+      0% { transform: translateX(-200px) translateY(0) rotate(-35deg); opacity: 0; }
+      10% { opacity: 1; }
+      100% { transform: translateX(100vw) translateY(-60vh) rotate(-35deg); opacity: 0; }
+    }
+    header { position: relative; z-index: 1; text-align: center; padding: 70px 20px 30px; }
+    header h1 {
+      margin: 0;
+      font-size: clamp(2.2rem, 5.5vw, 4rem);
+      letter-spacing: 2px;
+      background: linear-gradient(90deg, var(--accent1), var(--accent2), var(--accent3), var(--accent1));
+      background-size: 300% 100%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: gradientMove 6s linear infinite;
+      filter: drop-shadow(0 0 20px rgba(0, 240, 255, 0.35));
+    }
+    @keyframes gradientMove { 0% { background-position: 0% 50%; } 100% { background-position: 100% 50%; } }
+    .subtitle { color: var(--muted); margin-top: 12px; font-size: 1.05rem; }
+    main { position: relative; z-index: 1; max-width: 1400px; margin: 0 auto; padding: 0 20px 100px; }
+    .search { display: flex; justify-content: center; margin-bottom: 22px; }
+    .search input {
+      width: min(520px, 100%);
+      padding: 13px 22px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(0, 0, 0, 0.35);
+      color: var(--text);
+      font-size: 0.95rem;
+      outline: none;
+      transition: 0.2s;
+    }
+    .search input:focus { border-color: var(--accent1); box-shadow: 0 0 20px rgba(0, 240, 255, 0.2); }
+    .tabs {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      padding: 10px 0 18px;
+      margin-bottom: 6px;
+      scrollbar-width: thin;
+    }
+    .tabs::-webkit-scrollbar { height: 6px; }
+    .tabs::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 4px; }
+    .tab {
+      flex: 0 0 auto;
+      padding: 9px 18px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--muted);
+      cursor: pointer;
+      transition: 0.2s;
+      font-size: 0.88rem;
+    }
+    .tab:hover, .tab.active {
+      background: linear-gradient(90deg, var(--accent2), var(--accent3));
+      color: #fff;
+      border-color: transparent;
+      box-shadow: 0 0 18px rgba(188, 19, 254, 0.45);
+      transform: translateY(-2px);
+    }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 18px; }
+    .card {
+      background: var(--card);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--radius);
+      padding: 22px;
+      cursor: pointer;
+      transition: transform 0.25s, box-shadow 0.25s, border-color 0.25s;
+      position: relative;
+      overflow: hidden;
+      backdrop-filter: blur(8px);
+    }
+    .card::before {
+      content: '✦';
+      position: absolute;
+      top: 6px;
+      right: 12px;
+      color: rgba(255, 255, 255, 0.08);
+      font-size: 2.2rem;
+      line-height: 1;
+      transition: 0.3s;
+    }
+    .card:hover::before { color: var(--accent1); transform: rotate(20deg) scale(1.2); text-shadow: 0 0 15px var(--accent1); }
+    .card:hover {
+      transform: translateY(-8px);
+      border-color: var(--accent1);
+      box-shadow: 0 16px 45px rgba(0, 240, 255, 0.18), inset 0 0 25px rgba(0, 240, 255, 0.06);
+    }
+    .card h3 { margin: 0 0 8px; font-size: 1.05rem; color: #fff; }
+    .card p { margin: 0; font-size: 0.84rem; color: var(--muted); line-height: 1.45; }
+    .card .badge {
+      display: inline-block;
+      margin-top: 14px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      background: rgba(0, 240, 255, 0.12);
+      color: var(--accent1);
+      border: 1px solid rgba(0, 240, 255, 0.18);
+    }
+    .modal {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.72);
+      backdrop-filter: blur(8px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s;
+    }
+    .modal.open { opacity: 1; pointer-events: auto; }
+    .modal-content {
+      width: min(920px, 94vw);
+      max-height: 90vh;
+      overflow-y: auto;
+      background: linear-gradient(180deg, #151a3d 0%, #0b0e26 100%);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 26px;
+      padding: 26px;
+      box-shadow: 0 24px 90px rgba(0, 0, 0, 0.7);
+      position: relative;
+    }
+    .modal-content::-webkit-scrollbar { width: 8px; }
+    .modal-content::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 4px; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .modal-header h2 {
+      margin: 0;
+      font-size: 1.55rem;
+      background: linear-gradient(90deg, var(--accent1), var(--accent3));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .close-btn { background: none; border: none; color: var(--muted); font-size: 2rem; cursor: pointer; line-height: 1; transition: 0.2s; }
+    .close-btn:hover { color: #fff; transform: rotate(90deg); }
+    .desc { color: var(--muted); margin-bottom: 20px; font-size: 0.92rem; }
+    .field { display: flex; flex-direction: column; gap: 7px; margin-bottom: 14px; }
+    .field span { font-size: 0.85rem; color: var(--muted); }
+    .field input, .field select, .field textarea {
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(0, 0, 0, 0.28);
+      color: var(--text);
+      font-size: 0.9rem;
+      outline: none;
+      transition: 0.2s;
+    }
+    .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--accent1); }
+    .field input[type="range"] { padding: 0; accent-color: var(--accent1); }
+    .range-label { display: flex; justify-content: space-between; font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
+    .range-label span:nth-child(2) { color: var(--accent1); font-weight: 600; }
+    .actions { display: flex; gap: 12px; margin: 20px 0; flex-wrap: wrap; }
+    .btn {
+      padding: 11px 20px;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      font-size: 0.92rem;
+      transition: 0.2s;
+      color: #fff;
+      background: linear-gradient(90deg, var(--accent2), var(--accent3));
+      box-shadow: 0 0 18px rgba(188, 19, 254, 0.35);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn:hover { transform: scale(1.04); box-shadow: 0 0 28px rgba(188, 19, 254, 0.55); }
+    .btn.secondary { background: rgba(255, 255, 255, 0.08); color: var(--text); box-shadow: none; }
+    .btn.secondary:hover { background: rgba(255, 255, 255, 0.15); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .preview {
+      min-height: 140px;
+      border-radius: 18px;
+      background: rgba(0, 0, 0, 0.28);
+      border: 1px dashed rgba(255, 255, 255, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      overflow: auto;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .preview img, .preview svg { max-width: 100%; max-height: 52vh; object-fit: contain; border-radius: 10px; }
+    .preview .gallery { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+    .preview .gallery img { max-height: 130px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.1); }
+    .note { padding: 12px; border-radius: 10px; background: rgba(255, 255, 255, 0.05); color: var(--muted); font-size: 0.84rem; line-height: 1.5; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.84rem; }
+    th, td { padding: 9px; border-bottom: 1px solid rgba(255, 255, 255, 0.08); text-align: left; }
+    th { color: var(--accent1); }
+    .empty { color: var(--muted); font-size: 0.9rem; }
+    ::selection { background: rgba(0, 240, 255, 0.25); color: #fff; }
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.2); }
+    ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.25); }
+    .modal.wide .modal-content { width: min(1600px, 98vw); max-height: 96vh; }
+    .modal.wide .preview { background: transparent; border: none; padding: 0; overflow: visible; display: block; }
+
+    /* WeChat generator */
+    .wx-layout { display: grid; grid-template-columns: 380px 1fr; gap: 22px; align-items: start; }
+    .wx-left { display: flex; flex-direction: column; gap: 14px; max-height: calc(96vh - 160px); overflow-y: auto; padding-right: 6px; }
+    .wx-right { display: flex; flex-direction: column; align-items: flex-start; gap: 14px; position: sticky; top: 0; max-height: calc(96vh - 160px); overflow: auto; }
+    .wx-section { background: rgba(0, 0, 0, 0.22); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; padding: 14px; }
+    .wx-section h4 { margin: 0 0 12px; font-size: 0.95rem; color: var(--accent1); letter-spacing: 0.5px; }
+    .wx-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
+    .wx-field { display: flex; flex-direction: column; gap: 4px; }
+    .wx-field span { font-size: 0.78rem; color: var(--muted); }
+    .wx-field input, .wx-field select, .wx-field textarea { padding: 7px 9px; border-radius: 9px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.3); color: var(--text); font-size: 0.85rem; outline: none; }
+    .wx-field input:focus, .wx-field select:focus, .wx-field textarea:focus { border-color: var(--accent1); }
+    .wx-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .wx-row .wx-field { flex: 1; min-width: 90px; }
+
+    /* user list as vertical side-by-side cards */
+    .wx-user-list { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 6px; }
+    .wx-user-item { flex: 0 0 auto; width: 118px; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 12px; border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; background: rgba(255,255,255,0.03); transition: 0.2s; }
+    .wx-user-item:hover { border-color: rgba(0,240,255,0.3); }
+    .wx-user-item.me { background: rgba(0,240,255,0.1); border-color: rgba(0,240,255,0.25); box-shadow: 0 0 16px rgba(0,240,255,0.1); }
+    .wx-user-item .top { display: flex; justify-content: space-between; width: 100%; }
+    .wx-avatar-thumb { width: 56px; height: 56px; border-radius: 8px; object-fit: cover; background: rgba(255,255,255,0.1); cursor: pointer; border: 2px dashed rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--muted); transition: 0.2s; position: relative; overflow: hidden; }
+    .wx-avatar-thumb:hover { border-color: var(--accent1); box-shadow: 0 0 12px rgba(0,240,255,0.3); }
+    .wx-avatar-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .wx-avatar-thumb .add { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.35); font-size: 22px; color: #fff; }
+    .wx-user-item input[type="text"] { width: 100%; text-align: center; padding: 5px; font-size: 0.82rem; }
+    .wx-user-item input[type="color"] { width: 28px; height: 28px; border: none; background: none; cursor: pointer; }
+    .wx-user-badge { font-size: 0.68rem; color: var(--accent1); text-align: center; }
+    .wx-user-actions { display: flex; gap: 6px; align-items: center; }
+    .wx-mini-btn { padding: 7px 14px; border-radius: 999px; border: none; cursor: pointer; font-size: 0.82rem; color: #fff; background: linear-gradient(90deg, var(--accent2), var(--accent3)); transition: 0.2s; font-weight: 500; }
+    .wx-mini-btn:hover { transform: translateY(-1px); box-shadow: 0 0 16px rgba(188, 19, 254, 0.45); }
+    .wx-mini-btn.secondary { background: rgba(255,255,255,0.08); }
+    .wx-mini-btn.secondary:hover { background: rgba(255,255,255,0.15); }
+    .wx-mini-btn.small { padding: 5px 10px; font-size: 0.75rem; }
+    .wx-add-btns { display: flex; flex-wrap: wrap; gap: 8px; }
+    .wx-export-btns { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+    .wx-toggle { position: relative; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; font-size: 0.78rem; color: var(--muted); }
+    .wx-toggle input { position: absolute; opacity: 0; width: 0; height: 0; }
+    .wx-toggle .slider { position: relative; width: 42px; height: 22px; background: rgba(255,255,255,0.12); border-radius: 999px; transition: 0.25s; }
+    .wx-toggle .slider::after { content: ''; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; background: #fff; border-radius: 50%; transition: 0.25s; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+    .wx-toggle input:checked + .slider { background: linear-gradient(90deg, var(--accent2), var(--accent3)); box-shadow: 0 0 12px rgba(188,19,254,0.4); }
+    .wx-toggle input:checked + .slider::after { transform: translateX(20px); }
+    .wx-theme-switch { display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.04); border-radius: 999px; padding: 5px 5px 5px 14px; font-size: 0.82rem; color: var(--muted); }
+    .wx-theme-btn { border: none; background: transparent; color: var(--muted); cursor: pointer; padding: 5px 12px; border-radius: 999px; transition: 0.2s; font-size: 0.8rem; }
+    .wx-theme-btn.active { background: linear-gradient(90deg, var(--accent2), var(--accent3)); color: #fff; box-shadow: 0 0 12px rgba(188,19,254,0.35); }
+    .wx-msglist { max-height: 220px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+    .wx-msgitem { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07); border-radius: 12px; padding: 10px; }
+    .wx-msgitem-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 0.8rem; color: var(--muted); }
+    .wx-type-badge { padding: 2px 8px; border-radius: 999px; background: rgba(0,240,255,0.12); color: var(--accent1); font-size: 0.7rem; }
+    .wx-del { background: none; border: none; color: #ff6b6b; cursor: pointer; font-size: 1rem; line-height: 1; }
+    .wx-radio { appearance: none; width: 20px; height: 20px; border: 2px solid rgba(255,255,255,0.2); border-radius: 50%; cursor: pointer; position: relative; transition: 0.2s; }
+    .wx-radio:checked { border-color: var(--accent1); box-shadow: 0 0 10px rgba(0,240,255,0.35); }
+    .wx-radio:checked::after { content: ''; position: absolute; inset: 3px; background: var(--accent1); border-radius: 50%; }
+    .wx-voice-durations { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+    .wx-voice-durations button { padding: 4px 10px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.05); color: var(--muted); cursor: pointer; font-size: 0.75rem; transition: 0.2s; }
+    .wx-voice-durations button:hover, .wx-voice-durations button.active { background: linear-gradient(90deg, var(--accent2), var(--accent3)); color: #fff; border-color: transparent; }
+    .wx-amount-presets { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+    .wx-amount-presets button { padding: 4px 10px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.05); color: var(--muted); cursor: pointer; font-size: 0.75rem; transition: 0.2s; }
+    .wx-amount-presets button:hover { background: rgba(255,255,255,0.12); }
+
+    /* phone frame real 1080x1920 canvas */
+    .wx-phone { width: 1080px; height: 1920px; background: #0a0a0a; border-radius: 144px; position: relative; box-shadow: 0 72px 210px rgba(0,0,0,0.7), inset 0 0 0 3px rgba(255,255,255,0.12); display: flex; flex-direction: column; overflow: hidden; }
+    .wx-phone::before { content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 360px; height: 84px; background: #000; border-radius: 0 0 54px 54px; z-index: 10; }
+    .wx-phone::after { content: ''; position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%); width: 360px; height: 12px; background: rgba(255,255,255,0.25); border-radius: 2997px; z-index: 10; }
+    .wx-screen { width: 1080px; height: 1920px; background: #ededed; overflow: hidden; display: flex; flex-direction: column; color: #000; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif; position: relative; }
+    .wx-screen.dark { background: #111; color: #fff; }
+    .wx-statusbar { height: 120px; display: flex; align-items: center; justify-content: space-between; padding: 0 54px; font-size: 42px; font-weight: 600; background: #ededed; color: #000; padding-top: 6px; }
+    .wx-screen.dark .wx-statusbar { background: #111; color: #fff; }
+    .wx-status-left, .wx-status-right { display: flex; align-items: center; gap: 18px; }
+    .wx-signal { display: flex; align-items: flex-end; gap: 6px; height: 42px; }
+    .wx-signal i { width: 9px; background: #000; border-radius: 3px; opacity: 0.22; }
+    .wx-screen.dark .wx-signal i { background: #fff; }
+    .wx-signal i.on { opacity: 1; }
+    .wx-signal i:nth-child(1) { height: 12px; }
+    .wx-signal i:nth-child(2) { height: 18px; }
+    .wx-signal i:nth-child(3) { height: 24px; }
+    .wx-signal i:nth-child(4) { height: 30px; }
+    .wx-wifi { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+    .wx-wifi i { width: 48px; height: 21px; border-radius: 30px 30px 0 0; border-top: 6px solid #000; border-left: 6px solid #000; border-right: 6px solid #000; opacity: 0.22; box-sizing: border-box; }
+    .wx-screen.dark .wx-wifi i { border-color: #fff; }
+    .wx-wifi i.on { opacity: 1; }
+    .wx-wifi i:nth-child(2) { width: 30px; height: 15px; }
+    .wx-wifi i:nth-child(3) { width: 15px; height: 12px; border-radius: 6px 6px 0 0; border-width: 4.5px; }
+    .wx-battery { display: flex; align-items: center; gap: 9px; }
+    .wx-battery-body { width: 75px; height: 33px; border: 3px solid #000; border-radius: 6px; padding: 3px; position: relative; }
+    .wx-screen.dark .wx-battery-body { border-color: #fff; }
+    .wx-battery-body::after { content: ''; position: absolute; right: -9px; top: 6px; width: 6px; height: 15px; background: #000; border-radius: 0 3px 3px 0; }
+    .wx-screen.dark .wx-battery-body::after { background: #fff; }
+    .wx-battery-fill { height: 100%; background: #000; border-radius: 3px; }
+    .wx-screen.dark .wx-battery-fill { background: #fff; }
+    .wx-navbar { height: 156px; display: flex; align-items: center; justify-content: space-between; padding: 0 42px; background: #ededed; border-bottom: 3px solid #d6d6d6; position: relative; }
+    .wx-screen.dark .wx-navbar { background: #111; border-bottom-color: #333; }
+    .wx-nav-left, .wx-nav-right { display: flex; align-items: center; gap: 18px; min-width: 210px; }
+    .wx-nav-right { justify-content: flex-end; }
+    .wx-nav-title { position: absolute; left: 50%; transform: translateX(-50%); font-size: 54px; font-weight: 600; color: #000; max-width: 630px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .wx-screen.dark .wx-nav-title { color: #fff; }
+    .wx-back { width: 33px; height: 33px; border-left: 7.5px solid #000; border-bottom: 7.5px solid #000; transform: rotate(45deg); margin-right: 6px; }
+    .wx-screen.dark .wx-back { border-color: #fff; }
+    .wx-dots { display: flex; gap: 9px; }
+    .wx-dots i { width: 12px; height: 12px; background: #000; border-radius: 50%; }
+    .wx-screen.dark .wx-dots i { background: #fff; }
+    .wx-unread { background: #ff3b30; color: #fff; font-size: 33px; min-width: 54px; height: 54px; border-radius: 2997px; display: flex; align-items: center; justify-content: center; padding: 0 15px; }
+    .wx-chat { background: #ebebeb; padding: 42px; display: flex; flex-direction: column; gap: 54px; flex: 1; overflow-y: auto; position: relative; }
+    .wx-screen.dark .wx-chat { background: #0a0a0a; }
+    .wx-time { text-align: center; color: #999; font-size: 39px; }
+    .wx-screen.dark .wx-time { color: #666; }
+    .wx-msg-row { display: flex; align-items: flex-start; gap: 30px; }
+    .wx-msg-row.right { flex-direction: row-reverse; }
+    .wx-avatar { width: 132px; height: 132px; border-radius: 21px; overflow: hidden; background: #bbb; display: flex; align-items: center; justify-content: center; font-size: 39px; color: #fff; flex-shrink: 0; position: relative; cursor: pointer; border: 6px solid transparent; }
+    .wx-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .wx-bubble-wrap { max-width: 720px; display: flex; flex-direction: column; }
+    .wx-bubble { padding: 30px 36px; border-radius: 21px; background: #fff; color: #000; font-size: 48px; line-height: 1.45; word-break: break-word; position: relative; }
+    .wx-msg-row.right .wx-bubble { background: #95ec69; }
+    .wx-screen.dark .wx-bubble { background: #2c2c2c; color: #fff; }
+    .wx-screen.dark .wx-msg-row.right .wx-bubble { background: #1f6b1f; }
+    .wx-bubble::before { content: ''; position: absolute; top: 42px; width: 0; height: 0; }
+    .wx-msg-row.left .wx-bubble::before { left: -18px; border-right: 18px solid #fff; border-top: 15px solid transparent; border-bottom: 15px solid transparent; }
+    .wx-msg-row.right .wx-bubble::before { right: -18px; border-left: 18px solid #95ec69; border-top: 15px solid transparent; border-bottom: 15px solid transparent; }
+    .wx-screen.dark .wx-msg-row.left .wx-bubble::before { border-right-color: #2c2c2c; }
+    .wx-screen.dark .wx-msg-row.right .wx-bubble::before { border-left-color: #1f6b1f; }
+    .wx-img-msg { max-width: 660px; border-radius: 21px; overflow: hidden; }
+    .wx-img-msg img { width: 100%; display: block; }
+    .wx-voice { display: flex; align-items: center; gap: 24px; min-width: 240px; }
+    .wx-voice-icon { width: 54px; height: 54px; display: flex; align-items: center; justify-content: center; }
+    .wx-voice-icon svg { width: 48px; height: 48px; fill: currentColor; }
+    .wx-voice-unread { width: 27px; height: 27px; background: #ff3b30; border-radius: 50%; margin-left: 6px; }
+    .wx-redpacket { width: 720px; background: #fa5151; border-radius: 21px; color: #fff; overflow: hidden; }
+    .wx-redpacket-head { display: flex; align-items: center; gap: 36px; padding: 42px; border-bottom: 3px solid rgba(255,255,255,0.2); }
+    .wx-redpacket-icon { width: 132px; height: 132px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 78px; }
+    .wx-redpacket-main { font-size: 51px; }
+    .wx-redpacket-sub { font-size: 39px; opacity: 0.85; margin-top: 6px; }
+    .wx-redpacket-foot { background: #f2f2f2; color: #999; font-size: 36px; padding: 18px 42px; }
+    .wx-screen.dark .wx-redpacket-foot { background: #1a1a1a; color: #777; }
+    .wx-transfer { width: 720px; background: #07c160; border-radius: 21px; color: #fff; overflow: hidden; }
+    .wx-transfer-head { display: flex; align-items: center; gap: 36px; padding: 42px; border-bottom: 3px solid rgba(255,255,255,0.2); }
+    .wx-transfer-icon { width: 132px; height: 132px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 78px; }
+    .wx-transfer-main { font-size: 51px; }
+    .wx-transfer-amount { font-size: 66px; font-weight: 600; margin-top: 6px; }
+    .wx-transfer-foot { background: #f2f2f2; color: #999; font-size: 36px; padding: 18px 42px; }
+    .wx-screen.dark .wx-transfer-foot { background: #1a1a1a; color: #777; }
+    .wx-inputbar { height: 168px; background: #f7f7f7; border-top: 3px solid #e5e5e5; display: flex; align-items: center; gap: 30px; padding: 0 42px; flex-shrink: 0; }
+    .wx-screen.dark .wx-inputbar { background: #111; border-top-color: #333; }
+    .wx-inputbar .c { flex: 1; height: 108px; background: #fff; border-radius: 15px; border: 3px solid #e5e5e5; }
+    .wx-screen.dark .wx-inputbar .c { background: #222; border-color: #444; }
+
+    /* call screens */
+    .wx-call-overlay { position: absolute; inset: 0; z-index: 100; display: flex; flex-direction: column; align-items: center; color: #fff; background: #111; }
+    .wx-call-overlay .call-statusbar { width: 100%; height: 120px; display: flex; align-items: center; justify-content: center; padding: 0 54px; font-size: 42px; font-weight: 600; color: #fff; padding-top: 6px; }
+    .wx-call-overlay .call-top-hint { margin-top: 24px; font-size: 39px; color: #999; }
+    .wx-call-avatar { width: 330px; height: 330px; border-radius: 48px; overflow: hidden; background: #bbb; display: flex; align-items: center; justify-content: center; font-size: 108px; color: #fff; margin-top: 210px; box-shadow: 0 24px 90px rgba(0,0,0,0.4); }
+    .wx-call-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .wx-call-name { font-size: 72px; font-weight: 600; color: #fff; margin-top: 66px; }
+    .wx-call-status { font-size: 45px; color: #999; margin-top: 30px; }
+    .wx-call-actions { display: flex; gap: 126px; margin-top: auto; margin-bottom: 180px; }
+    .wx-call-action { display: flex; flex-direction: column; align-items: center; gap: 24px; }
+    .wx-call-action .icon { width: 198px; height: 198px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 84px; color: #fff; }
+    .wx-call-action .label { font-size: 39px; color: #aaa; }
+    .wx-call-action.hangup .icon { background: #ff3b30; }
+    .wx-call-action.mute .icon { background: rgba(255,255,255,0.2); }
+    .wx-call-action.speaker .icon { background: rgba(255,255,255,0.2); }
+    .wx-call-action.accept .icon { background: #07c160; }
+    .wx-call-action.video-switch .icon { background: rgba(255,255,255,0.2); }
+    .wx-call-record { align-self: center; display: inline-flex; align-items: center; gap: 18px; padding: 18px 36px; border-radius: 12px; background: #dadada; color: #666; font-size: 36px; margin: 6px 0; }
+    .wx-screen.dark .wx-call-record { background: #2c2c2c; color: #999; }
+    .wx-call-record .icon { font-size: 33px; opacity: 0.85; }
+    .wx-input-btn { width: 84px; height: 84px; border-radius: 50%; border: 3px solid #999; display: flex; align-items: center; justify-content: center; color: #555; cursor: pointer; flex-shrink: 0; }
+    .wx-input-btn svg { width: 48px; height: 48px; }
+    .wx-screen.dark .wx-input-btn { border-color: #666; color: #aaa; }
+    .wx-emoji-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 8px; margin-top: 12px; }
+    .wx-emoji-grid button { font-size: 1.4rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 6px; cursor: pointer; transition: 0.15s; }
+    .wx-emoji-grid button:hover { background: rgba(255,255,255,0.12); transform: scale(1.1); }
+
+    @media (max-width: 1000px) {
+      .wx-layout { grid-template-columns: 1fr; }
+      .wx-right { position: static; max-height: none; overflow: visible; align-items: center; }
+      .wx-phone { width: min(1080px, 92vw); height: auto; aspect-ratio: 9/16; overflow: auto; }
+    }
+    @media (max-width: 600px) {
+      header { padding-top: 40px; }
+      .modal-content { padding: 18px; border-radius: 20px; }
+      .wx-user-item { width: 100px; padding: 10px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="stars"></div>
+  <header>
+    <h1>星光图匠 StarPhoto Toolkit</h1>
+    <p class="subtitle">一站式本地图像与创意工具箱</p>
+  </header>
+  <main>
+    <div class="search">
+      <input type="text" id="searchInput" placeholder="搜索工具名称或功能…">
+    </div>
+    <nav class="tabs" id="tabs"></nav>
+    <div class="grid" id="grid"></div>
+  </main>
+
+  <div class="modal" id="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modalTitle">工具</h2>
+        <button class="close-btn" id="closeBtn">&times;</button>
+      </div>
+      <p class="desc" id="modalDesc"></p>
+      <div id="modalControls"></div>
+      <div class="actions">
+        <button class="btn" id="runBtn">✨ 执行处理</button>
+        <button class="btn secondary" id="downloadBtn" disabled>⬇ 下载结果</button>
+      </div>
+      <div class="preview" id="modalPreview"><span class="empty">处理结果将在这里预览</span></div>
+    </div>
+  </div>
+
+  <script>
+    const $ = id => document.getElementById(id);
+    let resultBlob = null, resultName = 'result.png';
+    let resultBlobs = [];
+
+    const categories = [
+      { id: 'all', name: '全部' },
+      { id: 'convert', name: '格式转换' },
+      { id: 'preview', name: '预览下载' },
+      { id: 'filter', name: '滤镜特效' },
+      { id: 'compress', name: '压缩转换' },
+      { id: 'crop', name: '剪切旋转' },
+      { id: 'round', name: '边框圆角' },
+      { id: 'compose', name: '制作生成' },
+      { id: 'watermark', name: '颜色水印' },
+      { id: 'wechat', name: '微信对话' },
+      { id: 'other', name: '其它工具' }
+    ];
+
+    const tools = [
+      { id: 'to-svg', cat: 'convert', name: '图片转矢量图', desc: '用 Potrace 将位图追踪为可缩放的 SVG。' },
+      { id: 'to-bmp', cat: 'convert', name: '图片转BMP格式', desc: '批量将常见图片转为 BMP 位图格式。' },
+      { id: 'to-jpg', cat: 'convert', name: '图片转JPG格式', desc: '批量将图片转为 JPG 并调节质量。' },
+      { id: 'view-gif', cat: 'preview', name: 'GIF图片查看器', desc: '本地预览 GIF 动图。' },
+      { id: 'view-webp', cat: 'preview', name: 'WebP图片查看器', desc: '本地预览 WebP 图片。' },
+      { id: 'view-bmp', cat: 'preview', name: 'BMP图片查看器', desc: '本地预览 BMP 图片。' },
+      { id: 'view-svg', cat: 'preview', name: 'SVG图片查看器', desc: '本地预览 SVG 矢量图。' },
+      { id: 'view-jpg', cat: 'preview', name: 'JPG图片查看器', desc: '本地预览 JPG 图片。' },
+      { id: 'view-heic', cat: 'preview', name: 'HEIC图片预览', desc: '在浏览器中将 HEIC 转为可预览图片。' },
+      { id: 'url-preview', cat: 'preview', name: '图像链接预览', desc: '批量预览指定的图片 URL。' },
+      { id: 'invert', cat: 'filter', name: '负片图像还原', desc: '将图片颜色反相，生成负片效果。' },
+      { id: 'aging', cat: 'filter', name: '图片老化/绿化', desc: '为图片增加复古绿色旧图风格。' },
+      { id: 'grayscale', cat: 'filter', name: '图像转灰度图像', desc: '一键将彩色图片转为灰度。' },
+      { id: 'blur', cat: 'filter', name: '图片模糊化', desc: '批量给图片添加高斯模糊。' },
+      { id: 'compress-to', cat: 'compress', name: '压缩图片到指定大小', desc: '通过二分查找将图片压缩到目标 KB。' },
+      { id: 'increase-size', cat: 'compress', name: '增加图片体积', desc: '等比放大图片尺寸以达到目标文件大小。' },
+      { id: 'split', cat: 'crop', name: '图像均等切割', desc: '按行/列将图片均切为若干小张。' },
+      { id: 'orient', cat: 'crop', name: '图片方向调整', desc: '旋转 90°、180° 或水平/垂直翻转。' },
+      { id: 'center-crop', cat: 'crop', name: '图片居中剪切', desc: '按指定比例从中心裁剪图片。' },
+      { id: 'crop', cat: 'crop', name: '图片剪切', desc: '按坐标与宽高截取任意区域。' },
+      { id: 'round-corners', cat: 'round', name: '图片圆角制作', desc: '为图片四角添加圆角并导出 PNG。' },
+      { id: 'long-image', cat: 'compose', name: '长图制作', desc: '将多张图片横向或纵向拼接成长图。' },
+      { id: 'merge', cat: 'compose', name: '图片多图合并', desc: '将多张图片按网格合并成一张。' },
+      { id: 'watermark-img', cat: 'watermark', name: '图片水印添加', desc: '在图片上叠加图片水印，可调整位置与透明度。' },
+      { id: 'watermark-tile', cat: 'watermark', name: '图片加平铺水印', desc: '全屏平铺图片水印。' },
+      { id: 'watermark-text', cat: 'watermark', name: '文字水印添加', desc: '在图片上添加文字水印。' },
+      { id: 'anti-duplicate', cat: 'other', name: '图片防重复检测处理', desc: '对像素施加轻微扰动，降低重复识别率。' },
+      { id: 'img-list', cat: 'other', name: '图像列表读取', desc: '批量读取选中图片的名称、尺寸与大小。' },
+      { id: 'img-extract', cat: 'other', name: 'IMG标签图像链接提取', desc: '从 HTML 源码中提取所有 IMG 的 src。' },
+      { id: 'dpi', cat: 'other', name: '修改分辨率DPI', desc: '修改 PNG/JPEG 的 DPI 元数据（浏览器端实现）。' },
+      { id: 'resize', cat: 'other', name: '图片尺寸大小修改', desc: '按指定宽高等比或自由缩放图片。' },
+      { id: 'wechat-generator', cat: 'wechat', name: '微信对话生成器', desc: '模拟 iPhone 微信聊天界面，支持文字、图片、语音、红包、转账消息并导出 PNG/视频/GIF。' }
+    ];
+
+    // ---------- utilities ----------
+    function readFile(file) {
+      return new Promise((resolve, reject) => {
+        const r = new FileReader();
+        r.onload = e => resolve(e.target.result);
+        r.onerror = reject;
+        r.readAsDataURL(file);
+      });
+    }
+    function loadImage(src) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = () => reject(new Error('无法加载图片'));
+        img.src = src;
+      });
+    }
+    async function fileToImage(file) { return loadImage(await readFile(file)); }
+    function createCanvas(w, h) {
+      const c = document.createElement('canvas');
+      c.width = w; c.height = h;
+      return c;
+    }
+    function canvasToBlob(canvas, mime = 'image/png', quality) {
+      return new Promise(resolve => canvas.toBlob(resolve, mime, quality));
+    }
+    function getExt(name) {
+      const i = name.lastIndexOf('.');
+      return i === -1 ? '' : name.slice(i + 1).toLowerCase();
+    }
+    function changeExt(name, ext) {
+      return name.replace(/\.[^.]+$/, '') + ext;
+    }
+    function noExt(name) { return name.replace(/\.[^.]+$/, ''); }
+    function prefixName(name, prefix) { return prefix + name; }
+
+    function encodeBMP(canvas) {
+      const ctx = canvas.getContext('2d');
+      const { data, width, height } = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const rowSize = Math.ceil(width * 3 / 4) * 4;
+      const pixelArraySize = rowSize * height;
+      const fileSize = 54 + pixelArraySize;
+      const buffer = new ArrayBuffer(fileSize);
+      const v = new DataView(buffer);
+      const bytes = new Uint8Array(buffer);
+      bytes[0] = 0x42; bytes[1] = 0x4D;
+      v.setUint32(2, fileSize, true);
+      v.setUint32(10, 54, true);
+      v.setUint32(14, 40, true);
+      v.setInt32(18, width, true);
+      v.setInt32(22, height, true);
+      v.setUint16(26, 1, true);
+      v.setUint16(28, 24, true);
+      v.setUint32(34, pixelArraySize, true);
+      v.setUint32(38, 2835, true);
+      v.setUint32(42, 2835, true);
+      let offset = 54;
+      for (let y = height - 1; y >= 0; y--) {
+        for (let x = 0; x < width; x++) {
+          const i = (y * width + x) * 4;
+          bytes[offset++] = data[i + 2];
+          bytes[offset++] = data[i + 1];
+          bytes[offset++] = data[i];
+        }
+        const pad = rowSize - width * 3;
+        for (let p = 0; p < pad; p++) bytes[offset++] = 0;
+      }
+      return new Blob([buffer], { type: 'image/bmp' });
+    }
+
+    // CRC32 for PNG DPI chunk
+    function makeCrcTable() {
+      const table = new Uint32Array(256);
+      for (let n = 0; n < 256; n++) {
+        let c = n;
+        for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+        table[n] = c;
+      }
+      return table;
+    }
+    const crcTable = makeCrcTable();
+    function crc32(buf) {
+      let c = -1;
+      for (let i = 0; i < buf.length; i++) c = (c >>> 8) ^ crcTable[(c ^ buf[i]) & 0xFF];
+      return (c ^ -1) >>> 0;
+    }
+    function u32be(n) { return [(n >>> 24) & 0xFF, (n >>> 16) & 0xFF, (n >>> 8) & 0xFF, n & 0xFF]; }
+    function strBytes(s) { return new TextEncoder().encode(s); }
+    function concat(...arrs) {
+      const total = arrs.reduce((a, b) => a + b.length, 0);
+      const out = new Uint8Array(total); let off = 0;
+      arrs.forEach(a => { out.set(a, off); off += a.length; });
+      return out;
+    }
+    function setPngDpi(uint8, dpi) {
+      const ppm = Math.round(dpi / 0.0254);
+      const signature = uint8.slice(0, 8);
+      let pos = 8;
+      const before = [];
+      let idatChunk = null, idatPos = 0;
+      while (pos < uint8.length) {
+        const len = (uint8[pos] << 24) | (uint8[pos + 1] << 16) | (uint8[pos + 2] << 8) | uint8[pos + 3];
+        const type = String.fromCharCode(...uint8.slice(pos + 4, pos + 8));
+        const data = uint8.slice(pos + 8, pos + 8 + len);
+        const crc = uint8.slice(pos + 8 + len, pos + 12 + len);
+        if (type === 'IDAT') { idatChunk = concat(u32be(len), strBytes(type), data, crc); idatPos = pos; break; }
+        before.push(concat(u32be(len), strBytes(type), data, crc));
+        pos += 12 + len;
+      }
+      if (!idatChunk) throw new Error('PNG 中未找到 IDAT 数据块');
+      const phyData = new Uint8Array(9);
+      const ppmBytes = u32be(ppm);
+      phyData.set(ppmBytes, 0); phyData.set(ppmBytes, 4); phyData[8] = 1;
+      const phyType = strBytes('pHYs');
+      const phyCrc = u32be(crc32(concat(phyType, phyData)));
+      const phyChunk = concat(u32be(9), phyType, phyData, phyCrc);
+      const afterPos = idatPos + 12 + idatChunk.length - 12; // idatChunk already includes 12-byte header
+      const after = uint8.slice(afterPos);
+      return concat(signature, ...before, phyChunk, idatChunk, after);
+    }
+    function setJpegDpi(uint8, dpi) {
+      if (uint8[0] !== 0xFF || uint8[1] !== 0xD8) throw new Error('不是 JPEG 文件');
+      const dpiBytes = [(dpi >> 8) & 0xFF, dpi & 0xFF];
+      let pos = 2;
+      if (uint8[pos] === 0xFF && uint8[pos + 1] === 0xE0) {
+        const len = (uint8[pos + 2] << 8) | uint8[pos + 3];
+        const seg = uint8.slice(pos + 4, pos + 2 + len);
+        const id = String.fromCharCode(...seg.slice(0, 5));
+        if (id === 'JFIF\0') {
+          const out = new Uint8Array(uint8.length);
+          out.set(uint8.slice(0, pos + 4 + 7));
+          out.set([1], pos + 4 + 7); // unit = inch
+          out.set(dpiBytes, pos + 4 + 8);
+          out.set(dpiBytes, pos + 4 + 10);
+          out.set(uint8.slice(pos + 4 + 12), pos + 4 + 12);
+          return out;
+        }
+        pos += 2 + len;
+      }
+      const app0 = new Uint8Array([0xFF, 0xE0, 0x00, 0x10, ...strBytes('JFIF\0'), 0x01, 0x01, 0x01, ...dpiBytes, ...dpiBytes, 0x00, 0x00]);
+      const out = new Uint8Array(app0.length + uint8.length);
+      out.set(uint8.slice(0, 2), 0);
+      out.set(app0, 2);
+      out.set(uint8.slice(2), 2 + app0.length);
+      return out;
+    }
+
+    // ---------- modal UI builders ----------
+    function clearModal() {
+      $('modalControls').innerHTML = '';
+      $('modalPreview').innerHTML = '<span class="empty">处理结果将在这里预览</span>';
+      $('downloadBtn').disabled = true;
+      $('downloadBtn').textContent = '⬇ 下载结果';
+      $('runBtn').style.display = '';
+      $('downloadBtn').style.display = '';
+      $('modalPreview').style.display = '';
+      const actions = document.querySelector('.actions'); if (actions) actions.style.display = '';
+      $('modal').classList.remove('wide');
+      resultBlob = null; resultBlobs = [];
+    }
+    function addField(label, input) {
+      const wrap = document.createElement('label');
+      wrap.className = 'field';
+      const span = document.createElement('span');
+      span.textContent = label;
+      wrap.appendChild(span);
+      wrap.appendChild(input);
+      $('modalControls').appendChild(wrap);
+      return input;
+    }
+    function addFile(label, multiple = false, accept = 'image/*') {
+      const input = document.createElement('input');
+      input.type = 'file'; input.accept = accept;
+      if (multiple) input.multiple = true;
+      return addField(label, input);
+    }
+    function addText(label, placeholder = '', value = '') {
+      const input = document.createElement('input');
+      input.type = 'text'; input.placeholder = placeholder; input.value = value;
+      return addField(label, input);
+    }
+    function addNumber(label, value, min, max, step = 1) {
+      const input = document.createElement('input');
+      input.type = 'number'; input.value = value; input.min = min; input.max = max; input.step = step;
+      return addField(label, input);
+    }
+    function addRange(label, value, min, max, step = 1) {
+      const input = document.createElement('input');
+      input.type = 'range'; input.value = value; input.min = min; input.max = max; input.step = step;
+      const wrap = document.createElement('label'); wrap.className = 'field';
+      const span = document.createElement('span'); span.textContent = label;
+      wrap.appendChild(span); wrap.appendChild(input);
+      const rl = document.createElement('div'); rl.className = 'range-label';
+      const cur = document.createElement('span'); cur.textContent = value;
+      rl.innerHTML = `<span>${min}</span>`; rl.appendChild(cur); rl.insertAdjacentHTML('beforeend', `<span>${max}</span>`);
+      wrap.appendChild(rl);
+      input.addEventListener('input', () => { cur.textContent = input.value; });
+      $('modalControls').appendChild(wrap);
+      return input;
+    }
+    function addSelect(label, options) {
+      const select = document.createElement('select');
+      options.forEach(o => { const opt = document.createElement('option'); opt.value = o.value; opt.textContent = o.text; select.appendChild(opt); });
+      return addField(label, select);
+    }
+    function addTextarea(label, placeholder = '', rows = 4) {
+      const ta = document.createElement('textarea');
+      ta.placeholder = placeholder; ta.rows = rows;
+      return addField(label, ta);
+    }
+    function addColor(label, value = '#ffffff') {
+      const input = document.createElement('input');
+      input.type = 'color'; input.value = value;
+      return addField(label, input);
+    }
+    function addNote(text) {
+      const div = document.createElement('div');
+      div.className = 'note'; div.textContent = text;
+      $('modalControls').appendChild(div);
+    }
+    function setRun(handler) { $('runBtn').onclick = handler; }
+
+    function previewImage(src, alt = '预览') {
+      const img = document.createElement('img'); img.src = src; img.alt = alt;
+      $('modalPreview').innerHTML = ''; $('modalPreview').appendChild(img);
+    }
+    function previewSvg(svg) { $('modalPreview').innerHTML = svg; }
+    function previewGallery(items) {
+      const wrap = document.createElement('div'); wrap.className = 'gallery';
+      items.forEach(item => {
+        const img = document.createElement('img');
+        img.src = URL.createObjectURL(item.blob); img.title = item.name;
+        wrap.appendChild(img);
+      });
+      $('modalPreview').innerHTML = ''; $('modalPreview').appendChild(wrap);
+    }
+    function setDownload(blob, filename) {
+      resultBlob = blob; resultName = filename;
+      $('downloadBtn').disabled = false; $('downloadBtn').textContent = '⬇ 下载 ' + filename;
+    }
+    function setDownloads(items, zipName) {
+      resultBlobs = items; resultName = zipName;
+      $('downloadBtn').disabled = false; $('downloadBtn').textContent = '⬇ 打包下载 ZIP (' + items.length + ' 个)';
+    }
+    async function downloadZip(items, zipName) {
+      const zip = new JSZip();
+      items.forEach(i => zip.file(i.name, i.blob));
+      const content = await zip.generateAsync({ type: 'blob' });
+      saveAs(content, zipName.replace(/\.\w+$/, '') + '.zip');
+    }
+    $('downloadBtn').onclick = () => {
+      if (resultBlob) saveAs(resultBlob, resultName);
+      else if (resultBlobs.length) downloadZip(resultBlobs, resultName);
+    };
+
+    function roundedRect(ctx, x, y, w, h, r) {
+      const rr = Math.min(r, w / 2, h / 2);
+      ctx.beginPath();
+      ctx.moveTo(x + rr, y);
+      ctx.lineTo(x + w - rr, y);
+      ctx.quadraticCurveTo(x + w, y, x + w, y + rr);
+      ctx.lineTo(x + w, y + h - rr);
+      ctx.quadraticCurveTo(x + w, y + h, x + w - rr, y + h);
+      ctx.lineTo(x + rr, y + h);
+      ctx.quadraticCurveTo(x, y + h, x, y + h - rr);
+      ctx.lineTo(x, y + rr);
+      ctx.quadraticCurveTo(x, y, x + rr, y);
+      ctx.closePath();
+    }
+
+    // ---------- tool implementations ----------
+    const toolSetups = {};
+
+    toolSetups['to-svg'] = () => {
+      const file = addFile('选择图片');
+      const threshold = addRange('黑白阈值', 128, 0, 255, 1);
+      setRun(async () => {
+        if (!file.files[0]) return alert('请选择图片');
+        Potrace.setParameter({ threshold: +threshold.value });
+        Potrace.loadImageFromFile(file.files[0]);
+        await new Promise(r => Potrace.process(r));
+        const svg = Potrace.getSVG(1);
+        previewSvg(svg);
+        setDownload(new Blob([svg], { type: 'image/svg+xml' }), changeExt(file.files[0].name, '.svg'));
+      });
+    };
+
+    toolSetups['to-bmp'] = () => {
+      const files = addFile('选择图片（可批量）', true);
+      setRun(async () => {
+        const fs = Array.from(files.files); if (!fs.length) return;
+        const items = [];
+        for (const f of fs) {
+          const img = await fileToImage(f);
+          const c = createCanvas(img.naturalWidth, img.naturalHeight);
+          c.getContext('2d').drawImage(img, 0, 0);
+          items.push({ blob: encodeBMP(c), name: changeExt(f.name, '.bmp') });
+        }
+        previewGallery(items);
+        setDownloads(items, 'bmp_batch');
+      });
+    };
+
+    toolSetups['to-jpg'] = () => {
+      const files = addFile('选择图片（可批量）', true);
+      const quality = addRange('JPEG 质量', 90, 1, 100, 1);
+      setRun(async () => {
+        const fs = Array.from(files.files); if (!fs.length) return;
+        const items = [];
+        for (const f of fs) {
+          const img = await fileToImage(f);
+          const c = createCanvas(img.naturalWidth, img.naturalHeight);
+          c.getContext('2d').drawImage(img, 0, 0);
+          const blob = await canvasToBlob(c, 'image/jpeg', +quality.value / 100);
+          items.push({ blob, name: changeExt(f.name, '.jpg') });
+        }
+        previewGallery(items);
+        setDownloads(items, 'jpg_batch');
+      });
+    };
+
+    ['view-gif', 'view-webp', 'view-bmp', 'view-jpg'].forEach(id => {
+      toolSetups[id] = () => {
+        const file = addFile('选择图片');
+        setRun(async () => {
+          const f = file.files[0]; if (!f) return;
+          const url = URL.createObjectURL(f);
+          previewImage(url, f.name);
+          setDownload(f, f.name);
+        });
+      };
+    });
+
+    toolSetups['view-svg'] = () => {
+      const file = addFile('选择 SVG 文件');
+      setRun(async () => {
+        const f = file.files[0]; if (!f) return;
+        const text = await f.text();
+        previewSvg(text);
+        setDownload(new Blob([text], { type: 'image/svg+xml' }), f.name);
+      });
+    };
+
+    toolSetups['view-heic'] = () => {
+      const file = addFile('选择 HEIC 图片');
+      addNote('HEIC 转码依赖 heic2any，会在本地完成，不会上传服务器。');
+      setRun(async () => {
+        const f = file.files[0]; if (!f) return;
+        if (typeof heic2any === 'undefined') return alert('HEIC 库未加载，请检查网络。');
+        const blob = await heic2any({ blob: f, toType: 'image/jpeg', quality: 0.92 });
+        const url = URL.createObjectURL(blob);
+        previewImage(url, changeExt(f.name, '.jpg'));
+        setDownload(blob, changeExt(f.name, '.jpg'));
+      });
+    };
+
+    toolSetups['url-preview'] = () => {
+      const ta = addTextarea('图片链接，每行一个', 'https://example.com/a.jpg\nhttps://example.com/b.png');
+      setRun(() => {
+        const urls = ta.value.split('\n').map(s => s.trim()).filter(Boolean);
+        const wrap = document.createElement('div'); wrap.className = 'gallery';
+        urls.forEach(u => {
+          const img = document.createElement('img');
+          img.src = u; img.alt = u; img.title = u;
+          img.onerror = () => { img.style.opacity = '0.3'; img.title = '加载失败: ' + u; };
+          wrap.appendChild(img);
+        });
+        $('modalPreview').innerHTML = ''; $('modalPreview').appendChild(wrap);
+      });
+    };
+
+    function makeFilterTool(id, filter, prefix, extraRange = null) {
+      toolSetups[id] = () => {
+        const files = addFile('选择图片（可批量）', true);
+        let rangeInput = null;
+        if (extraRange) rangeInput = addRange(extraRange.label, extraRange.value, extraRange.min, extraRange.max, extraRange.step);
+        setRun(async () => {
+          const fs = Array.from(files.files); if (!fs.length) return;
+          const items = [];
+          for (const f of fs) {
+            const img = await fileToImage(f);
+            let filterStr = filter;
+            if (rangeInput) filterStr = filterStr.replace('{{v}}', rangeInput.value);
+            const c = createCanvas(img.naturalWidth, img.naturalHeight);
+            const ctx = c.getContext('2d');
+            ctx.filter = filterStr;
+            ctx.drawImage(img, 0, 0);
+            const blob = await canvasToBlob(c);
+            items.push({ blob, name: prefix + f.name.replace(/\.[^.]+$/, '.png') });
+          }
+          previewGallery(items);
+          setDownloads(items, id + '_batch');
+        });
+      };
+    }
+    makeFilterTool('invert', 'invert(100%)', 'invert_');
+    makeFilterTool('aging', 'sepia(80%) hue-rotate(70deg) saturate(60%) contrast(1.1)', 'aging_');
+    makeFilterTool('grayscale', 'grayscale(100%)', 'gray_');
+    makeFilterTool('blur', 'blur({{v}}px)', 'blur_', { label: '模糊半径', value: 5, min: 1, max: 50, step: 1 });
+
+    toolSetups['compress-to'] = () => {
+      const file = addFile('选择图片');
+      const target = addNumber('目标大小 (KB)', 100, 1, 10000);
+      setRun(async () => {
+        const f = file.files[0]; if (!f) return;
+        const img = await fileToImage(f);
+        const targetBytes = +target.value * 1024;
+        let best = null;
+        let low = 0.01, high = 1.0;
+        for (let i = 0; i < 14; i++) {
+          const q = (low + high) / 2;
+          const c = createCanvas(img.naturalWidth, img.naturalHeight);
+          c.getContext('2d').drawImage(img, 0, 0);
+          const blob = await canvasToBlob(c, 'image/jpeg', q);
+          if (blob.size <= targetBytes) { best = { blob, q }; low = q; }
+          else { high = q; }
+        }
+        if (!best) {
+          const c = createCanvas(img.naturalWidth, img.naturalHeight);
+          c.getContext('2d').drawImage(img, 0, 0);
+          best = { blob: await canvasToBlob(c, 'image/jpeg', 0.01), q: 0.01 };
+        }
+        previewImage(URL.createObjectURL(best.blob));
+        setDownload(best.blob, changeExt(f.name, '.jpg'));
+        addNote('实际大小: ' + (best.blob.size / 1024).toFixed(2) + ' KB，质量约 ' + Math.round(best.q * 100) + '%');
+      });
+    };
+
+    toolSetups['increase-size'] = () => {
+      const file = addFile('选择图片');
+      const target = addNumber('目标大小 (KB)', 500, 1, 50000);
+      setRun(async () => {
+        const f = file.files[0]; if (!f) return;
+        const img = await fileToImage(f);
+        const targetBytes = +target.value * 1024;
+        let scale = 1, blob;
+        for (let i = 0; i < 20; i++) {
+          const c = createCanvas(Math.round(img.naturalWidth * scale), Math.round(img.naturalHeight * scale));
+          c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+          blob = await canvasToBlob(c, 'image/png');
+          if (blob.size >= targetBytes) break;
+          scale *= 1.25;
+        }
+        previewImage(URL.createObjectURL(blob));
+        setDownload(blob, changeExt(f.name, '.png'));
+        addNote('实际大小: ' + (blob.size / 1024).toFixed(2) + ' KB');
+      });
+    };
+
+    toolSetups['split'] = () => {
+      const file = addFile('选择图片');
+      const rows = addNumber('行数', 2, 1, 10, 1);
+      const cols = addNumber('列数', 2, 1, 10, 1);
+      setRun(async () => {
+        const f = file.files[0]; if (!f) return;
+        const img = await fileToImage(f);
+        const r = +rows.value, c = +cols.value;
+        const sw = Math.floor(img.naturalWidth / c), sh = Math.floor(img.naturalHeight / r);
+        const items = [];
+        for (let y = 0; y < r; y++) {
+          for (let x = 0; x < c; x++) {
+            const canvas = createCanvas(sw, sh);
+            canvas.getContext('2d').drawImage(img, x * sw, y * sh, sw, sh, 0, 0, sw, sh);
+            const blob = await canvasToBlob(canvas);
+            items.push({ blob, name: `split_${y + 1}_${x + 1}.png` });
+          }
+        }
+        previewGallery(items);
+        setDownloads(items, noExt(f.name) + '_split');
+      });
+    };
+
+    toolSetups['orient'] = () => {
+      const file = addFile('选择图片');
+      const op = addSelect('方向操作', [
+        { value: 'left', text: '向左旋转 90°' },
+        { value: 'right', text: '向右旋转 90°' },
+        { value: '180', text: '旋转 180°' },
+        { value: 'flip-h', text: '水平翻转' },
+        { value: 'flip-v', text: '垂直翻转' }
+      ]);
+      setRun(async () => {
+        const f = file.files[0]; if (!f) return;
+        const img = await fileToImage(f);
+        const w = img.naturalWidth, h = img.naturalHeight;
+        let c, ctx;
+        switch (op.value) {
+          case 'left': c = createCanvas(h, w); ctx = c.getContext('2d'); ctx.translate(0, w); ctx.rotate(-Math.PI / 2); ctx.drawImage(img, 0, 0); break;
+          case 'right': c = createCanvas(h, w); ctx = c.getContext('2d'); ctx.translate(h, 0); ctx.rotate(Math.PI / 2); ctx.drawImage(img, 0, 0); break;
+          case '180': c = createCanvas(w, h); ctx = c.getContext('2d'); ctx.translate(w, h); ctx.rotate(Math.PI); ctx.drawImage(img, 0, 0); break;
+          case 'flip-h': c = createCanvas(w, h); ctx = c.getContext('2d'); ctx.translate(w, 0); ctx.scale(-1, 1); ctx.drawImage(img, 0, 0); break;
+          case 'flip-v': c = createCanvas(w, h); ctx = c.getContext('2d'); ctx.translate(0, h); ctx.scale(1, -1); ctx.drawImage(img, 0, 0); break;
+        }
+        const blob = await canvasToBlob(c);
+        previewImage(URL.createObjectURL(blob));
+        setDownload(blob, prefixName(f.name, 'oriented_'));
+      });
+    };
+
+    toolSetups['center-crop'] = () => {
+      const file = addFile('选择图片');
+      const ratio = addSelect('裁剪比例', [
+        { value: '1:1', text: '1:1 正方形' },
+        { value: '4:3', text: '4:3' },
+        { value: '3:4', text: '3:4' },
+        { value: '16:9', text: '16:9' },
+        { value: '9:16', text: '9:16' }
+      ]);
+      setRun(async () => {
+        const f = file.files[0]; if (!f) return;
+        const img = await fileToImage(f);
+        const [rw, rh] = ratio.value.split(':').map(Number);
+        const w = img.naturalWidth, h = img.naturalHeight;
+        const target = rw / rh;
+        let nw, nh, sx, sy;
+        if (w / h > target) { nh = h; nw = nh * target; sx = (w - nw) / 2; sy = 0; }
+        else { nw = w; nh = nw / target; sx = 0; sy = (h - nh) / 2; }
+        const c = createCanvas(nw, nh);
+        c.getContext('2d').drawImage(img, sx, sy, nw, nh, 0, 0, nw, nh);
+        const blob = await canvasToBlob(c);
+        previewImage(URL.createObjectURL(blob));
+        setDownload(blob, prefixName(f.name, 'crop_'));
+      });
+    };
+
+    toolSetups['crop'] = () => {
+      const file = addFile('选择图片');
+      const x = addNumber('起点 X', 0, 0, 99999, 1);
+      const y = addNumber('起点 Y', 0, 0, 99999, 1);
+      const w = addNumber('宽度', 100, 1, 99999, 1);
+      const h = addNumber('高度', 100, 1, 99999, 1);
+      setRun(async () => {
+        const f = file.files[0]; if (!f) return;
+        const img = await fileToImage(f);
+        const c = createCanvas(+w.value, +h.value);
+        c.getContext('2d').drawImage(img, +x.value, +y.value, +w.value, +h.value, 0, 0, +w.value, +h.value);
+        const blob = await canvasToBlob(c);
+        previewImage(URL.createObjectURL(blob));
+        setDownload(blob, prefixName(f.name, 'cropped_'));
+      });
+    };
+
+    toolSetups['round-corners'] = () => {
+      const file = addFile('选择图片');
+      const r = addRange('圆角半径 (px)', 30, 0, 200, 1);
+      setRun(async () => {
+        const f = file.files[0]; if (!f) return;
+        const img = await fileToImage(f);
+        const c = createCanvas(img.naturalWidth, img.naturalHeight);
+        const ctx = c.getContext('2d');
+        roundedRect(ctx, 0, 0, c.width, c.height, +r.value);
+        ctx.clip();
+        ctx.drawImage(img, 0, 0);
+        const blob = await canvasToBlob(c);
+        previewImage(URL.createObjectURL(blob));
+        setDownload(blob, prefixName(f.name, 'rounded_'));
+      });
+    };
+
+    toolSetups['long-image'] = () => {
+      const files = addFile('选择图片（按顺序）', true);
+      const dir = addSelect('拼接方向', [
+        { value: 'v', text: '纵向拼接' },
+        { value: 'h', text: '横向拼接' }
+      ]);
+      setRun(async () => {
+        const fs = Array.from(files.files); if (fs.length < 2) return alert('至少需要 2 张图片');
+        const imgs = await Promise.all(fs.map(fileToImage));
+        let c, blob;
+        if (dir.value === 'v') {
+          const w = Math.max(...imgs.map(i => i.naturalWidth));
+          const h = imgs.reduce((a, i) => a + i.naturalHeight, 0);
+          c = createCanvas(w, h); let y = 0;
+          imgs.forEach(img => { const x = (w - img.naturalWidth) / 2; c.getContext('2d').drawImage(img, x, y); y += img.naturalHeight; });
+        } else {
+          const w = imgs.reduce((a, i) => a + i.naturalWidth, 0);
+          const h = Math.max(...imgs.map(i => i.naturalHeight));
+          c = createCanvas(w, h); let x = 0;
+          imgs.forEach(img => { const y = (h - img.naturalHeight) / 2; c.getContext('2d').drawImage(img, x, y); x += img.naturalWidth; });
+        }
+        blob = await canvasToBlob(c);
+        previewImage(URL.createObjectURL(blob));
+        setDownload(blob, 'long_image.png');
+      });
+    };
+
+    toolSetups['merge'] = () => {
+      const files = addFile('选择图片（可批量）', true);
+      const cols = addNumber('每行张数', 3, 1, 10, 1);
+      setRun(async () => {
+        const fs = Array.from(files.files); if (!fs.length) return;
+        const imgs = await Promise.all(fs.map(fileToImage));
+        const cnum = +cols.value;
+        const rows = Math.ceil(imgs.length / cnum);
+        const cellW = Math.max(...imgs.map(i => i.naturalWidth));
+        const cellH = Math.max(...imgs.map(i => i.naturalHeight));
+        const c = createCanvas(cnum * cellW, rows * cellH);
+        imgs.forEach((img, i) => {
+          const col = i % cnum, row = Math.floor(i / cnum);
+          const x = col * cellW + (cellW - img.naturalWidth) / 2;
+          const y = row * cellH + (cellH - img.naturalHeight) / 2;
+          c.getContext('2d').drawImage(img, x, y);
+        });
+        const blob = await canvasToBlob(c);
+        previewImage(URL.createObjectURL(blob));
+        setDownload(blob, 'merged_grid.png');
+      });
+    };
+
+    toolSetups['watermark-img'] = () => {
+      const base = addFile('底图');
+      const wm = addFile('水印图片');
+      const pos = addSelect('位置', [
+        { value: 'center', text: '居中' },
+        { value: 'tl', text: '左上' },
+        { value: 'tr', text: '右上' },
+        { value: 'bl', text: '左下' },
+        { value: 'br', text: '右下' }
+      ]);
+      const opacity = addRange('透明度', 50, 0, 100, 1);
+      const scale = addRange('水印缩放 (%)', 30, 5, 100, 1);
+      setRun(async () => {
+        if (!base.files[0] || !wm.files[0]) return alert('请选择底图和水印');
+        const img = await fileToImage(base.files[0]);
+        const logo = await fileToImage(wm.files[0]);
+        const c = createCanvas(img.naturalWidth, img.naturalHeight);
+        const ctx = c.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        const lw = img.naturalWidth * (+scale.value / 100);
+        const lh = lw * (logo.naturalHeight / logo.naturalWidth);
+        let lx = 0, ly = 0;
+        const pad = 20;
+        switch (pos.value) {
+          case 'center': lx = (c.width - lw) / 2; ly = (c.height - lh) / 2; break;
+          case 'tl': lx = pad; ly = pad; break;
+          case 'tr': lx = c.width - lw - pad; ly = pad; break;
+          case 'bl': lx = pad; ly = c.height - lh - pad; break;
+          case 'br': lx = c.width - lw - pad; ly = c.height - lh - pad; break;
+        }
+        ctx.globalAlpha = +opacity.value / 100;
+        ctx.drawImage(logo, lx, ly, lw, lh);
+        ctx.globalAlpha = 1;
+        const blob = await canvasToBlob(c);
+        previewImage(URL.createObjectURL(blob));
+        setDownload(blob, prefixName(base.files[0].name, 'watermarked_'));
+      });
+    };
+
+    toolSetups['watermark-tile'] = () => {
+      const base = addFile('底图');
+      const wm = addFile('水印图片');
+      const opacity = addRange('透明度', 30, 0, 100, 1);
+      const gap = addNumber('间距 (px)', 60, 0, 500, 1);
+      const scale = addRange('水印缩放 (%)', 20, 5, 80, 1);
+      setRun(async () => {
+        if (!base.files[0] || !wm.files[0]) return alert('请选择底图和水印');
+        const img = await fileToImage(base.files[0]);
+        const logo = await fileToImage(wm.files[0]);
+        const c = createCanvas(img.naturalWidth, img.naturalHeight);
+        const ctx = c.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        const lw = img.naturalWidth * (+scale.value / 100);
+        const lh = lw * (logo.naturalHeight / logo.naturalWidth);
+        ctx.globalAlpha = +opacity.value / 100;
+        for (let y = 0; y < c.height + lh; y += lh + +gap.value) {
+          for (let x = 0; x < c.width + lw; x += lw + +gap.value) {
+            ctx.drawImage(logo, x, y, lw, lh);
+          }
+        }
+        ctx.globalAlpha = 1;
+        const blob = await canvasToBlob(c);
+        previewImage(URL.createObjectURL(blob));
+        setDownload(blob, prefixName(base.files[0].name, 'tiled_'));
+      });
+    };
+
+    toolSetups['watermark-text'] = () => {
+      const base = addFile('底图');
+      const text = addText('水印文字', 'StarPhoto');
+      const size = addNumber('字体大小', 48, 8, 300, 1);
+      const color = addColor('文字颜色', '#ffffff');
+      const opacity = addRange('透明度', 60, 0, 100, 1);
+      const pos = addSelect('位置', [
+        { value: 'center', text: '居中' },
+        { value: 'tl', text: '左上' },
+        { value: 'tr', text: '右上' },
+        { value: 'bl', text: '左下' },
+        { value: 'br', text: '右下' }
+      ]);
+      const angle = addRange('旋转角度', 0, -180, 180, 1);
+      setRun(async () => {
+        if (!base.files[0]) return;
+        const img = await fileToImage(base.files[0]);
+        const c = createCanvas(img.naturalWidth, img.naturalHeight);
+        const ctx = c.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        ctx.font = `bold ${size.value}px system-ui, sans-serif`;
+        ctx.fillStyle = color.value;
+        ctx.globalAlpha = +opacity.value / 100;
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        const metrics = ctx.measureText(text.value);
+        let x = c.width / 2, y = c.height / 2;
+        const pad = 30;
+        switch (pos.value) {
+          case 'tl': x = pad + metrics.width / 2; y = pad + +size.value / 2; break;
+          case 'tr': x = c.width - pad - metrics.width / 2; y = pad + +size.value / 2; break;
+          case 'bl': x = pad + metrics.width / 2; y = c.height - pad - +size.value / 2; break;
+          case 'br': x = c.width - pad - metrics.width / 2; y = c.height - pad - +size.value / 2; break;
+        }
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(+angle.value * Math.PI / 180);
+        ctx.fillText(text.value, 0, 0);
+        ctx.restore();
+        ctx.globalAlpha = 1;
+        const blob = await canvasToBlob(c);
+        previewImage(URL.createObjectURL(blob));
+        setDownload(blob, prefixName(base.files[0].name, 'textwm_'));
+      });
+    };
+
+    toolSetups['anti-duplicate'] = () => {
+      const files = addFile('选择图片（可批量）', true);
+      const strength = addRange('扰动强度', 3, 1, 20, 1);
+      setRun(async () => {
+        const fs = Array.from(files.files); if (!fs.length) return;
+        const items = [];
+        for (const f of fs) {
+          const img = await fileToImage(f);
+          const c = createCanvas(img.naturalWidth, img.naturalHeight);
+          const ctx = c.getContext('2d');
+          ctx.drawImage(img, 0, 0);
+          const d = ctx.getImageData(0, 0, c.width, c.height);
+          const s = +strength.value;
+          for (let i = 0; i < d.data.length; i += 4) {
+            const noise = (Math.random() - 0.5) * 2 * s;
+            d.data[i] = Math.min(255, Math.max(0, d.data[i] + noise));
+            d.data[i + 1] = Math.min(255, Math.max(0, d.data[i + 1] + noise));
+            d.data[i + 2] = Math.min(255, Math.max(0, d.data[i + 2] + noise));
+          }
+          ctx.putImageData(d, 0, 0);
+          const blob = await canvasToBlob(c);
+          items.push({ blob, name: prefixName(f.name, 'unique_') });
+        }
+        previewGallery(items);
+        setDownloads(items, 'anti_duplicate_batch');
+      });
+    };
+
+    toolSetups['img-list'] = () => {
+      const files = addFile('选择图片（可批量）', true);
+      setRun(async () => {
+        const fs = Array.from(files.files); if (!fs.length) return;
+        const rows = await Promise.all(fs.map(async f => {
+          let dim = '-';
+          try { const img = await fileToImage(f); dim = img.naturalWidth + '×' + img.naturalHeight; } catch (e) {}
+          return `<tr><td>${f.name}</td><td>${(f.size / 1024).toFixed(2)} KB</td><td>${dim}</td><td>${f.type || 'unknown'}</td></tr>`;
+        }));
+        $('modalPreview').innerHTML = `<table><tr><th>文件名</th><th>大小</th><th>尺寸</th><th>类型</th></tr>${rows.join('')}</table>`;
+      });
+    };
+
+    toolSetups['img-extract'] = () => {
+      const ta = addTextarea('粘贴 HTML 源码', '<img src="https://example.com/a.jpg">');
+      setRun(() => {
+        const html = ta.value;
+        const matches = [];
+        let m;
+        const re = /<img[^>]+src\s*=\s*["']([^"']+)["'][^>]*>/gi;
+        while ((m = re.exec(html)) !== null) matches.push(m[1]);
+        const wrap = document.createElement('div');
+        if (!matches.length) { wrap.textContent = '未提取到 IMG 链接'; }
+        else {
+          const list = document.createElement('ul');
+          matches.forEach(u => { const li = document.createElement('li'); li.textContent = u; list.appendChild(li); });
+          wrap.appendChild(list);
+          const gal = document.createElement('div'); gal.className = 'gallery';
+          matches.forEach(u => { const img = document.createElement('img'); img.src = u; img.onerror = () => img.remove(); gal.appendChild(img); });
+          wrap.appendChild(gal);
+        }
+        $('modalPreview').innerHTML = ''; $('modalPreview').appendChild(wrap);
+      });
+    };
+
+    toolSetups['dpi'] = () => {
+      const file = addFile('选择 PNG 或 JPEG');
+      const dpi = addNumber('目标 DPI', 300, 1, 2400, 1);
+      addNote('浏览器端仅修改文件元数据，不重新编码图像像素。非 PNG/JPEG 会先转成 PNG 再写入 pHYs 元数据。');
+      setRun(async () => {
+        const f = file.files[0]; if (!f) return;
+        const ext = getExt(f.name);
+        const buf = new Uint8Array(await f.arrayBuffer());
+        let out;
+        if (ext === 'png') out = setPngDpi(buf, +dpi.value);
+        else if (ext === 'jpg' || ext === 'jpeg') out = setJpegDpi(buf, +dpi.value);
+        else {
+          // convert to png then set dpi
+          const img = await fileToImage(f);
+          const c = createCanvas(img.naturalWidth, img.naturalHeight);
+          c.getContext('2d').drawImage(img, 0, 0);
+          const pngBuf = new Uint8Array(await (await canvasToBlob(c)).arrayBuffer());
+          out = setPngDpi(pngBuf, +dpi.value);
+        }
+        const blob = new Blob([out], { type: ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg' : 'image/png' });
+        previewImage(URL.createObjectURL(blob));
+        setDownload(blob, prefixName(f.name, 'dpi_'));
+      });
+    };
+
+    toolSetups['resize'] = () => {
+      const file = addFile('选择图片');
+      const wInput = addNumber('目标宽度 (px)', 800, 1, 10000, 1);
+      const hInput = addNumber('目标高度 (px)', 600, 1, 10000, 1);
+      const keep = (() => {
+        const wrap = document.createElement('label'); wrap.className = 'field';
+        wrap.innerHTML = '<span>锁定比例</span>';
+        const input = document.createElement('input'); input.type = 'checkbox'; input.checked = true;
+        wrap.appendChild(input); $('modalControls').appendChild(wrap); return input;
+      })();
+      let ratio = 1;
+      file.addEventListener('change', async () => {
+        const f = file.files[0]; if (!f) return;
+        const img = await fileToImage(f);
+        wInput.value = img.naturalWidth; hInput.value = img.naturalHeight;
+        ratio = img.naturalWidth / img.naturalHeight;
+      });
+      wInput.addEventListener('input', () => { if (keep.checked) hInput.value = Math.round(+wInput.value / ratio); });
+      hInput.addEventListener('input', () => { if (keep.checked) wInput.value = Math.round(+hInput.value * ratio); });
+      setRun(async () => {
+        const f = file.files[0]; if (!f) return;
+        const img = await fileToImage(f);
+        if (ratio === 1) ratio = img.naturalWidth / img.naturalHeight;
+        const c = createCanvas(+wInput.value, +hInput.value);
+        c.getContext('2d').drawImage(img, 0, 0, +wInput.value, +hInput.value);
+        const blob = await canvasToBlob(c);
+        previewImage(URL.createObjectURL(blob));
+        setDownload(blob, prefixName(f.name, 'resized_'));
+      });
+    };
+
+    toolSetups['wechat-generator'] = () => {
+      $('modal').classList.add('wide');
+      $('runBtn').style.display = 'none';
+      $('downloadBtn').style.display = 'none';
+      $('modalPreview').style.display = 'none';
+      const actions = document.querySelector('.actions'); if (actions) actions.style.display = 'none';
+      const controls = $('modalControls');
+      const previewWrap = $('modalPreview');
+      controls.innerHTML = '';
+      previewWrap.innerHTML = '';
+
+      let nextId = 1;
+      const state = {
+        status: { signal: 4, network: '5G', wifi: 3, time: '09:41', charging: true, battery: 78, earpiece: false, unread: 0, title: '微信聊天', voice: false, bg: null, theme: 'light' },
+        users: [{ id: 'u0', name: '我', avatar: null, frameColor: '#00f0ff' }],
+        currentUserId: 'u0',
+        messages: []
+      };
+      const escapeHtml = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const dataURLtoBlob = dataurl => {
+        const arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1], bstr = atob(arr[1]);
+        let n = bstr.length;
+        const u8 = new Uint8Array(n);
+        while (n--) u8[n] = bstr.charCodeAt(n);
+        return new Blob([u8], { type: mime });
+      };
+
+      controls.innerHTML = `<div class="wx-layout"><div class="wx-left" id="wxLeft"></div><div class="wx-right" id="wxRight"></div></div>`;
+      const left = $('wxLeft'), right = $('wxRight');
+
+      /* ---------- status ---------- */
+      const statusSec = document.createElement('div'); statusSec.className = 'wx-section'; statusSec.innerHTML = '<h4>外观 / 状态栏</h4>';
+      const statusGrid = document.createElement('div'); statusGrid.className = 'wx-grid';
+      statusSec.appendChild(statusGrid);
+      function statusField(label, el) {
+        const f = document.createElement('label'); f.className = 'wx-field';
+        const s = document.createElement('span'); s.textContent = label;
+        f.appendChild(s); f.appendChild(el);
+        return el;
+      }
+      function toggleField(label, checked, onchange) {
+        const f = document.createElement('label'); f.className = 'wx-toggle';
+        const inp = document.createElement('input'); inp.type = 'checkbox'; inp.checked = checked;
+        const slider = document.createElement('span'); slider.className = 'slider';
+        const txt = document.createElement('span'); txt.textContent = label;
+        f.appendChild(inp); f.appendChild(slider); f.appendChild(txt);
+        inp.onchange = () => onchange(inp.checked);
+        return f;
+      }
+      const darkToggle = toggleField('深色模式', state.status.theme === 'dark', v => { state.status.theme = v ? 'dark' : 'light'; renderPreview(); });
+      darkToggle.style.gridColumn = '1 / -1';
+      statusGrid.appendChild(darkToggle);
+
+      const sigSel = statusField('手机信号', document.createElement('select'));
+      [1, 2, 3, 4].forEach(v => { const o = document.createElement('option'); o.value = v; o.textContent = v + ' 格'; sigSel.appendChild(o); });
+      sigSel.value = state.status.signal;
+      const netSel = statusField('网络类型', document.createElement('select'));
+      [['wifi', 'WiFi'], ['3G', '3G'], ['4G', '4G'], ['5G', '5G']].forEach(([v, t]) => { const o = document.createElement('option'); o.value = v; o.textContent = t; netSel.appendChild(o); });
+      netSel.value = state.status.network;
+      const wifiSel = statusField('WiFi 信号', document.createElement('select'));
+      [1, 2, 3].forEach(v => { const o = document.createElement('option'); o.value = v; o.textContent = v + ' 格'; wifiSel.appendChild(o); });
+      wifiSel.value = state.status.wifi;
+      const timeIn = statusField('手机时间', document.createElement('input')); timeIn.type = 'text'; timeIn.value = state.status.time;
+      const battIn = statusField('电量 %', document.createElement('input')); battIn.type = 'number'; battIn.min = 0; battIn.max = 100; battIn.value = state.status.battery;
+      const unreadIn = statusField('未读消息', document.createElement('input')); unreadIn.type = 'number'; unreadIn.min = 0; unreadIn.value = state.status.unread;
+      const titleIn = statusField('聊天标题', document.createElement('input')); titleIn.type = 'text'; titleIn.value = state.status.title;
+      const bgIn = statusField('聊天背景', document.createElement('input')); bgIn.type = 'file'; bgIn.accept = 'image/*';
+      const chargeToggle = toggleField('充电中', state.status.charging, v => { state.status.charging = v; renderPreview(); });
+      const earToggle = toggleField('听筒模式', state.status.earpiece, v => { state.status.earpiece = v; renderPreview(); });
+      const voiceToggle = toggleField('语音模式', state.status.voice, v => { state.status.voice = v; renderPreview(); });
+      [sigSel.parentNode, netSel.parentNode, wifiSel.parentNode, timeIn.parentNode, battIn.parentNode, unreadIn.parentNode, titleIn.parentNode, bgIn.parentNode, chargeToggle, earToggle, voiceToggle].forEach(n => statusGrid.appendChild(n));
+      sigSel.onchange = () => { state.status.signal = +sigSel.value; renderPreview(); };
+      netSel.onchange = () => { state.status.network = netSel.value; renderPreview(); };
+      wifiSel.onchange = () => { state.status.wifi = +wifiSel.value; renderPreview(); };
+      timeIn.oninput = () => { state.status.time = timeIn.value; renderPreview(); };
+      battIn.oninput = () => { state.status.battery = +battIn.value; renderPreview(); };
+      unreadIn.oninput = () => { state.status.unread = +unreadIn.value; renderPreview(); };
+      titleIn.oninput = () => { state.status.title = titleIn.value; renderPreview(); };
+      bgIn.onchange = async () => { const f = bgIn.files[0]; state.status.bg = f ? await readFile(f) : null; renderPreview(); };
+      left.appendChild(statusSec);
+
+      /* ---------- users ---------- */
+      const userSec = document.createElement('div'); userSec.className = 'wx-section'; userSec.innerHTML = '<h4>用户管理</h4>';
+      const userList = document.createElement('div'); userList.id = 'wxUserList';
+      userSec.appendChild(userList);
+      const addUserBtn = document.createElement('button'); addUserBtn.className = 'wx-mini-btn'; addUserBtn.style.marginTop = '10px'; addUserBtn.textContent = '+ 添加参与者';
+      addUserBtn.onclick = () => { state.users.push({ id: 'u' + nextId++, name: '用户' + state.users.length, avatar: null, frameColor: '#bc13fe' }); renderUsers(); renderPreview(); };
+      userSec.appendChild(addUserBtn);
+      left.appendChild(userSec);
+
+      function renderUsers() {
+        userList.innerHTML = '';
+        state.users.forEach((u, i) => {
+          const row = document.createElement('div'); row.className = 'wx-user-item' + (u.id === 'u0' ? ' me' : '');
+          const top = document.createElement('div'); top.className = 'top';
+          const frameIn = document.createElement('input'); frameIn.type = 'color'; frameIn.value = u.frameColor; frameIn.title = '头像边框色'; frameIn.oninput = () => { u.frameColor = frameIn.value; renderPreview(); };
+          const del = document.createElement('button'); del.className = 'wx-del'; del.textContent = '×'; del.title = '删除'; del.disabled = i === 0; del.style.opacity = i === 0 ? '0.3' : '1'; del.onclick = () => { if (i === 0) return; state.users.splice(i, 1); if (state.currentUserId === u.id) state.currentUserId = 'u0'; renderUsers(); renderPreview(); };
+          top.appendChild(frameIn); top.appendChild(del);
+          const thumb = document.createElement('div'); thumb.className = 'wx-avatar-thumb'; thumb.title = '点击更换头像';
+          if (u.avatar) { const img = document.createElement('img'); img.src = u.avatar; thumb.appendChild(img); }
+          else { const span = document.createElement('span'); span.textContent = '+'; span.className = 'add'; thumb.appendChild(span); }
+          const avatarIn = document.createElement('input'); avatarIn.type = 'file'; avatarIn.accept = 'image/*'; avatarIn.style.display = 'none';
+          avatarIn.onchange = async () => { const f = avatarIn.files[0]; if (f) { u.avatar = await readFile(f); renderUsers(); renderPreview(); } };
+          thumb.onclick = () => avatarIn.click();
+          const nameIn = document.createElement('input'); nameIn.type = 'text'; nameIn.value = u.name; nameIn.oninput = () => { u.name = nameIn.value; renderPreview(); };
+          const badge = document.createElement('span'); badge.className = 'wx-user-badge'; badge.textContent = u.id === 'u0' ? '我（默认自己）' : (state.currentUserId === u.id ? '当前发言人' : '');
+          const radio = document.createElement('input'); radio.className = 'wx-radio'; radio.type = 'radio'; radio.name = 'wxSender'; radio.value = u.id; radio.checked = state.currentUserId === u.id; radio.title = '设为当前发送人'; radio.onchange = () => { state.currentUserId = u.id; renderUsers(); renderPreview(); };
+          row.appendChild(top); row.appendChild(thumb); row.appendChild(avatarIn); row.appendChild(nameIn); row.appendChild(badge); row.appendChild(radio);
+          userList.appendChild(row);
+        });
+      }
+
+      /* ---------- add messages ---------- */
+      const addSec = document.createElement('div'); addSec.className = 'wx-section'; addSec.innerHTML = '<h4>添加消息</h4>';
+      const addBtns = document.createElement('div'); addBtns.className = 'wx-add-btns';
+      [['text', '文字'], ['time', '时间'], ['image', '图片'], ['voice', '语音'], ['redpacket', '红包'], ['transfer', '转账'], ['voice-call', '语音通话'], ['video-call', '视频通话']].forEach(([type, label]) => {
+        const b = document.createElement('button'); b.className = 'wx-mini-btn'; b.textContent = '+' + label; b.onclick = () => addMessage(type); addBtns.appendChild(b);
+      });
+      addSec.appendChild(addBtns);
+      const emojiTitle = document.createElement('div'); emojiTitle.style.marginTop = '14px'; emojiTitle.style.fontSize = '0.8rem'; emojiTitle.style.color = 'var(--muted)'; emojiTitle.textContent = '点击 emoji 直接插入';
+      addSec.appendChild(emojiTitle);
+      const emojiGrid = document.createElement('div'); emojiGrid.className = 'wx-emoji-grid';
+      const emojis = ['😀','😂','🥰','😎','😭','😡','👍','👎','👏','🙏','🤝','🎉','❤️','🔥','🌹','💔','😴','🤔','😱','🤗','🥳','😇','🤡','💩','👻','👋','✌️','🙌','💪','🎁','🎈','🍎','🍺','🍰','🍜','🌙','☀️','⭐','☁️','⚡','❄️','💧','🌈','🔔','📞','💣','🧨','💊','💰','🧧','💯','✅','❌','❓','‼️','🚫','🆗','🆒','🉑','🈲','㊗️','㊙️','🈶','🈚','🈸','🈴','🈳','🈺','🈵'];
+      emojis.forEach(e => {
+        const b = document.createElement('button'); b.textContent = e; b.title = e;
+        b.onclick = () => { state.messages.push({ id: 'm' + nextId++, type: 'text', senderId: state.currentUserId, content: e }); renderMsgList(); renderPreview(); };
+        emojiGrid.appendChild(b);
+      });
+      addSec.appendChild(emojiGrid);
+      left.appendChild(addSec);
+
+      /* ---------- message list ---------- */
+      const msgSec = document.createElement('div'); msgSec.className = 'wx-section'; msgSec.innerHTML = '<h4>消息列表</h4>';
+      const clearWrap = document.createElement('div'); clearWrap.style.marginBottom = '10px';
+      const clearBtn = document.createElement('button'); clearBtn.className = 'wx-mini-btn secondary'; clearBtn.textContent = '清空聊天';
+      clearBtn.onclick = () => { if (confirm('确定清空所有聊天内容？')) { state.messages = []; renderMsgList(); renderPreview(); } };
+      clearWrap.appendChild(clearBtn); msgSec.appendChild(clearWrap);
+      const msgList = document.createElement('div'); msgList.className = 'wx-msglist'; msgList.id = 'wxMsgList';
+      msgSec.appendChild(msgList);
+      left.appendChild(msgSec);
+
+      /* ---------- right preview ---------- */
+      right.innerHTML = `<div class="wx-phone" id="wxPhone"><div class="wx-screen" id="wxScreen"></div></div><div class="wx-export-btns"><button class="wx-mini-btn" id="wxExportImg">生成图片</button><button class="wx-mini-btn" id="wxExportVideo">生成视频</button><button class="wx-mini-btn" id="wxExportGif">生成 GIF</button></div>`;
+      $('wxExportImg').onclick = exportImage;
+      $('wxExportVideo').onclick = exportVideo;
+      $('wxExportGif').onclick = exportGif;
+
+      function typeName(type) { const map = { text: '文字', time: '时间', image: '图片', voice: '语音', redpacket: '红包', transfer: '转账', 'voice-call': '语音通话', 'video-call': '视频通话' }; return map[type] || type; }
+
+      function addMessage(type) {
+        const msg = { id: 'm' + nextId++, type };
+        if (type !== 'time' && type !== 'voice-call' && type !== 'video-call') msg.senderId = state.currentUserId;
+        switch (type) {
+          case 'text': msg.content = '新消息'; break;
+          case 'time': msg.time = '12:00'; break;
+          case 'image': msg.image = null; break;
+          case 'voice': msg.seconds = 5; msg.isRead = false; break;
+          case 'redpacket': msg.amount = '8.88'; msg.remark = '恭喜发财，大吉大利'; break;
+          case 'transfer': msg.amount = '100.00'; msg.remark = '转账'; break;
+          case 'voice-call':
+          case 'video-call':
+            msg.contactId = state.users.find(u => u.id !== 'u0')?.id || 'u0';
+            msg.status = 'outgoing';
+            msg.duration = '00:32';
+            break;
+        }
+        state.messages.push(msg);
+        renderMsgList(); renderPreview();
+      }
+
+      function renderMsgList() {
+        const list = $('wxMsgList'); if (!list) return; list.innerHTML = '';
+        if (!state.messages.length) { list.innerHTML = '<div class="empty">暂无消息，点击上方按钮添加</div>'; return; }
+        state.messages.forEach(msg => {
+          const item = document.createElement('div'); item.className = 'wx-msgitem';
+          const header = document.createElement('div'); header.className = 'wx-msgitem-header';
+          const badge = document.createElement('span'); badge.className = 'wx-type-badge'; badge.textContent = typeName(msg.type);
+          const del = document.createElement('button'); del.className = 'wx-del'; del.textContent = '×'; del.onclick = () => { state.messages = state.messages.filter(m => m.id !== msg.id); renderMsgList(); renderPreview(); };
+          header.appendChild(badge); header.appendChild(del);
+          const body = document.createElement('div'); body.className = 'wx-row'; body.style.alignItems = 'flex-start';
+          if (msg.type !== 'time' && !msg.type.endsWith('-call')) {
+            const senderWrap = document.createElement('label'); senderWrap.className = 'wx-field'; senderWrap.style.flex = '0 0 100px';
+            const sspan = document.createElement('span'); sspan.textContent = '发送人';
+            const sel = document.createElement('select');
+            state.users.forEach(u => { const o = document.createElement('option'); o.value = u.id; o.textContent = u.name; sel.appendChild(o); });
+            sel.value = msg.senderId; sel.onchange = () => { msg.senderId = sel.value; renderPreview(); };
+            senderWrap.appendChild(sspan); senderWrap.appendChild(sel);
+            body.appendChild(senderWrap);
+          }
+          body.appendChild(messageControls(msg));
+          item.appendChild(header); item.appendChild(body); list.appendChild(item);
+        });
+      }
+
+      function messageControls(msg) {
+        const wrap = document.createElement('div'); wrap.className = 'wx-field'; wrap.style.flex = '1';
+        if (msg.type === 'text') {
+          const ta = document.createElement('textarea'); ta.placeholder = '输入文字'; ta.rows = 2; ta.value = msg.content;
+          ta.oninput = () => { msg.content = ta.value; renderPreview(); }; wrap.appendChild(ta);
+        } else if (msg.type === 'time') {
+          const inp = document.createElement('input'); inp.type = 'text'; inp.value = msg.time;
+          inp.oninput = () => { msg.time = inp.value; renderPreview(); }; wrap.appendChild(inp);
+        } else if (msg.type === 'image') {
+          const file = document.createElement('input'); file.type = 'file'; file.accept = 'image/*';
+          const thumb = document.createElement('img'); thumb.className = 'wx-avatar-thumb'; thumb.style.marginTop = '6px'; thumb.style.display = msg.image ? 'block' : 'none';
+          if (msg.image) thumb.src = msg.image;
+          file.onchange = async () => { const f = file.files[0]; if (f) { msg.image = await readFile(f); thumb.src = msg.image; thumb.style.display = 'block'; } renderPreview(); };
+          wrap.appendChild(file); wrap.appendChild(thumb);
+        } else if (msg.type === 'voice') {
+          const row = document.createElement('div'); row.className = 'wx-row';
+          const secIn = document.createElement('input'); secIn.type = 'number'; secIn.min = 1; secIn.value = msg.seconds; secIn.style.width = '70px';
+          secIn.oninput = () => { msg.seconds = +secIn.value; renderPreview(); };
+          const readLabel = document.createElement('label'); readLabel.className = 'wx-toggle'; readLabel.style.fontSize = '0.78rem';
+          const readCheck = document.createElement('input'); readCheck.type = 'checkbox'; readCheck.checked = msg.isRead;
+          readCheck.onchange = () => { msg.isRead = readCheck.checked; renderPreview(); };
+          const slider = document.createElement('span'); slider.className = 'slider';
+          const readSpan = document.createElement('span'); readSpan.textContent = '已读';
+          readLabel.appendChild(readCheck); readLabel.appendChild(slider); readLabel.appendChild(readSpan);
+          row.appendChild(secIn); row.appendChild(readLabel);
+          wrap.appendChild(row);
+          const presets = document.createElement('div'); presets.className = 'wx-voice-durations';
+          [1, 2, 3, 5, 10, 15, 30, 60].forEach(v => {
+            const b = document.createElement('button'); b.textContent = v + '"'; b.className = v === msg.seconds ? 'active' : '';
+            b.onclick = () => { msg.seconds = v; renderMsgList(); renderPreview(); };
+            presets.appendChild(b);
+          });
+          wrap.appendChild(presets);
+        } else if (msg.type === 'redpacket') {
+          const row = document.createElement('div'); row.className = 'wx-row';
+          const amountIn = document.createElement('input'); amountIn.type = 'number'; amountIn.step = '0.01'; amountIn.value = msg.amount; amountIn.style.width = '90px';
+          amountIn.oninput = () => { msg.amount = amountIn.value; renderPreview(); };
+          const remarkIn = document.createElement('input'); remarkIn.type = 'text'; remarkIn.placeholder = '备注'; remarkIn.value = msg.remark;
+          remarkIn.oninput = () => { msg.remark = remarkIn.value; renderPreview(); };
+          row.appendChild(amountIn); row.appendChild(remarkIn);
+          wrap.appendChild(row);
+          const presets = document.createElement('div'); presets.className = 'wx-amount-presets';
+          ['0.01', '6.66', '8.88', '66.66', '88.88', '100', '200'].forEach(v => {
+            const b = document.createElement('button'); b.textContent = '¥' + v;
+            b.onclick = () => { msg.amount = v; renderMsgList(); renderPreview(); };
+            presets.appendChild(b);
+          });
+          wrap.appendChild(presets);
+        } else if (msg.type === 'transfer') {
+          const row = document.createElement('div'); row.className = 'wx-row';
+          const amountIn = document.createElement('input'); amountIn.type = 'number'; amountIn.step = '0.01'; amountIn.value = msg.amount; amountIn.style.width = '90px';
+          amountIn.oninput = () => { msg.amount = amountIn.value; renderPreview(); };
+          const remarkIn = document.createElement('input'); remarkIn.type = 'text'; remarkIn.placeholder = '备注'; remarkIn.value = msg.remark;
+          remarkIn.oninput = () => { msg.remark = remarkIn.value; renderPreview(); };
+          row.appendChild(amountIn); row.appendChild(remarkIn);
+          wrap.appendChild(row);
+          const presets = document.createElement('div'); presets.className = 'wx-amount-presets';
+          ['1', '10', '50', '100', '500', '1000', '5200'].forEach(v => {
+            const b = document.createElement('button'); b.textContent = '¥' + v;
+            b.onclick = () => { msg.amount = v; renderMsgList(); renderPreview(); };
+            presets.appendChild(b);
+          });
+          wrap.appendChild(presets);
+        } else if (msg.type.endsWith('-call')) {
+          const row = document.createElement('div'); row.className = 'wx-row';
+          const contactWrap = document.createElement('label'); contactWrap.className = 'wx-field'; contactWrap.style.flex = '0 0 120px';
+          const cspan = document.createElement('span'); cspan.textContent = '通话对象';
+          const csel = document.createElement('select');
+          state.users.filter(u => u.id !== 'u0').forEach(u => { const o = document.createElement('option'); o.value = u.id; o.textContent = u.name; csel.appendChild(o); });
+          if (!csel.options.length) { const o = document.createElement('option'); o.value = 'u0'; o.textContent = state.users[0].name; csel.appendChild(o); }
+          csel.value = msg.contactId || csel.options[0].value;
+          csel.onchange = () => { msg.contactId = csel.value; renderPreview(); };
+          contactWrap.appendChild(cspan); contactWrap.appendChild(csel);
+          const statusWrap = document.createElement('label'); statusWrap.className = 'wx-field'; statusWrap.style.flex = '0 0 120px';
+          const sspan = document.createElement('span'); sspan.textContent = '通话状态';
+          const ssel = document.createElement('select');
+          [['outgoing', '拨出'], ['incoming', '来电'], ['connected', '接通'], ['missed', '未接'], ['rejected', '已拒绝']].forEach(([v, t]) => { const o = document.createElement('option'); o.value = v; o.textContent = t; ssel.appendChild(o); });
+          ssel.value = msg.status || 'outgoing';
+          ssel.onchange = () => { msg.status = ssel.value; renderPreview(); };
+          statusWrap.appendChild(sspan); statusWrap.appendChild(ssel);
+          const durIn = document.createElement('input'); durIn.type = 'text'; durIn.value = msg.duration || '00:32'; durIn.style.width = '80px';
+          durIn.oninput = () => { msg.duration = durIn.value; renderPreview(); };
+          row.appendChild(contactWrap); row.appendChild(statusWrap); row.appendChild(durIn);
+          wrap.appendChild(row);
+        }
+        return wrap;
+      }
+
+      function renderCallRecord(msg) {
+        const isVideo = msg.type === 'video-call';
+        const label = isVideo ? '视频通话' : '语音通话';
+        let text = label;
+        switch (msg.status) {
+          case 'outgoing': text = label + ' 已取消'; break;
+          case 'incoming': text = label + ' 未接听'; break;
+          case 'missed': text = '未接' + label; break;
+          case 'rejected': text = label + ' 已拒绝'; break;
+          case 'connected': text = label + ' ' + escapeHtml(msg.duration || '00:00'); break;
+        }
+        const icon = isVideo ? '▶' : '📞';
+        return `<div class="wx-call-record"><span class="icon">${icon}</span><span>${text}</span></div>`;
+      }
+
+      function renderCallOverlay(msg) {
+        const isVideo = msg.type === 'video-call';
+        const contact = state.users.find(u => u.id === msg.contactId) || state.users[0];
+        const avatar = contact.avatar ? `<img src="${contact.avatar}" alt="">` : `<span>${escapeHtml(contact.name.slice(0, 1))}</span>`;
+        let statusText = '';
+        switch (msg.status) {
+          case 'outgoing': statusText = isVideo ? '正在等待对方接受邀请…' : '正在呼叫…'; break;
+          case 'incoming': statusText = isVideo ? '邀请你视频通话' : '邀请你语音通话'; break;
+          case 'connected': statusText = escapeHtml(msg.duration || '00:00'); break;
+          case 'missed': statusText = '未接听'; break;
+          case 'rejected': statusText = '对方已拒绝'; break;
+        }
+        const actionHangup = `<div class="wx-call-action hangup"><div class="icon">📞</div><div class="label">挂断</div></div>`;
+        const actionMute = `<div class="wx-call-action mute"><div class="icon">🎙</div><div class="label">静音</div></div>`;
+        const actionSpeaker = `<div class="wx-call-action speaker"><div class="icon">🔊</div><div class="label">免提</div></div>`;
+        const actionAccept = `<div class="wx-call-action accept"><div class="icon">📞</div><div class="label">接听</div></div>`;
+        const actionSwitch = `<div class="wx-call-action video-switch"><div class="icon">🔄</div><div class="label">切换</div></div>`;
+        const actions = msg.status === 'incoming'
+          ? actionAccept + actionHangup
+          : (isVideo ? actionMute + actionSwitch + actionHangup : actionMute + actionSpeaker + actionHangup);
+        return `<div class="wx-call-overlay"><div class="call-statusbar">${escapeHtml(state.status.time)}</div><div class="call-top-hint">${isVideo ? '微信视频通话' : '微信语音通话'}</div><div class="wx-call-avatar" style="border-radius:${isVideo ? '50%' : '16px'}">${avatar}</div><div class="wx-call-name">${escapeHtml(contact.name)}</div><div class="wx-call-status">${statusText}</div><div class="wx-call-actions">${actions}</div></div>`;
+      }
+
+      function renderMessage(msg) {
+        if (msg.type === 'time') return `<div class="wx-time">${escapeHtml(msg.time)}</div>`;
+        if (msg.type.endsWith('-call')) return renderCallRecord(msg);
+        const user = state.users.find(u => u.id === msg.senderId) || state.users[0];
+        const isMe = msg.senderId === 'u0';
+        const avatar = user.avatar ? `<img src="${user.avatar}" alt="">` : `<span>${escapeHtml(user.name.slice(0, 1))}</span>`;
+        let content = '';
+        switch (msg.type) {
+          case 'text': content = `<div class="wx-bubble">${escapeHtml(msg.content)}</div>`; break;
+          case 'image': content = `<div class="wx-img-msg">${msg.image ? `<img src="${msg.image}">` : ''}</div>`; break;
+          case 'voice': content = `<div class="wx-bubble wx-voice"><span class="wx-voice-icon"><svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V6c0-1.66-1.34-3-3-3S9 4.34 9 6v5c0 1.66 1.34 3 3 3zm4.5-3c0 2.48-2.02 4.5-4.5 4.5s-4.5-2.02-4.5-4.5H6c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-1.5z"/></svg></span><span>${msg.seconds}"</span>${!isMe && !msg.isRead ? '<span class="wx-voice-unread"></span>' : ''}</div>`; break;
+          case 'redpacket': content = `<div class="wx-redpacket"><div class="wx-redpacket-head"><div class="wx-redpacket-icon">🧧</div><div><div class="wx-redpacket-main">${escapeHtml(msg.remark || '恭喜发财，大吉大利')}</div><div class="wx-redpacket-sub">微信红包</div></div></div><div class="wx-redpacket-foot">微信红包</div></div>`; break;
+          case 'transfer': content = `<div class="wx-transfer"><div class="wx-transfer-head"><div class="wx-transfer-icon">💰</div><div><div class="wx-transfer-main">${escapeHtml(msg.remark || '转账')}</div><div class="wx-transfer-amount">¥${escapeHtml(msg.amount)}</div></div></div><div class="wx-transfer-foot">微信转账</div></div>`; break;
+        }
+        return `<div class="wx-msg-row ${isMe ? 'right' : 'left'}"><div class="wx-avatar" style="border-color:${user.frameColor}">${avatar}</div><div class="wx-bubble-wrap">${content}</div></div>`;
+      }
+
+      let previewTimer;
+      function renderPreview() {
+        clearTimeout(previewTimer);
+        previewTimer = setTimeout(() => _renderPreview(), 60);
+      }
+      function _renderPreview() {
+        const screen = $('wxScreen'); if (!screen) return;
+        const s = state.status;
+        screen.className = 'wx-screen ' + (s.theme === 'dark' ? 'dark' : 'light');
+        const sigHtml = `<div class="wx-signal">${[1, 2, 3, 4].map(i => `<i class="${i <= s.signal ? 'on' : ''}"></i>`).join('')}</div>`;
+        const netHtml = s.network === 'wifi' ? `<div class="wx-wifi">${[1, 2, 3].map(i => `<i class="${i <= s.wifi ? 'on' : ''}"></i>`).join('')}</div>` : `<span>${s.network.toUpperCase()}</span>`;
+        const batteryHtml = `<div class="wx-battery"><div class="wx-battery-body"><div class="wx-battery-fill" style="width:${s.battery}%"></div></div>${s.charging ? '⚡' : ''}<span>${s.battery}%</span></div>`;
+        const statusHtml = `<div class="wx-statusbar"><div class="wx-status-left"><span>${escapeHtml(s.time)}</span>${sigHtml}${netHtml}</div><div class="wx-status-right">${s.earpiece ? '🎧' : ''}${batteryHtml}</div></div>`;
+        const navHtml = `<div class="wx-navbar"><div class="wx-nav-left"><div class="wx-back"></div>${s.unread > 0 ? `<span class="wx-unread">${s.unread}</span>` : ''}</div><div class="wx-nav-title">${escapeHtml(s.title)}</div><div class="wx-nav-right">${s.voice ? '<span title="听筒模式">🔊</span>' : ''}<div class="wx-dots"><i></i><i></i><i></i></div></div></div>`;
+        const bgStyle = s.bg ? `background-image:url(${s.bg});background-size:cover;background-position:center;` : '';
+        const msgsHtml = state.messages.map(renderMessage).join('');
+        const chatHtml = `<div class="wx-chat" style="${bgStyle}">${msgsHtml}</div>`;
+        const voiceIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>`;
+        const emojiIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>`;
+        const plusIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>`;
+        const inputBar = `<div class="wx-inputbar"><div class="wx-input-btn">${voiceIcon}</div><div class="c"></div><div class="wx-input-btn">${emojiIcon}</div><div class="wx-input-btn">${plusIcon}</div></div>`;
+        screen.innerHTML = statusHtml + navHtml + chatHtml + inputBar;
+        screen.querySelectorAll('.wx-avatar').forEach((av, idx) => {
+          const msg = state.messages.filter(m => m.type !== 'time' && !m.type.endsWith('-call'))[idx];
+          if (!msg) return;
+          const user = state.users.find(u => u.id === msg.senderId);
+          if (!user) return;
+          av.title = '点击更换头像';
+          av.onclick = () => {
+            const input = document.createElement('input'); input.type = 'file'; input.accept = 'image/*';
+            input.onchange = async () => { const f = input.files[0]; if (f) { user.avatar = await readFile(f); renderUsers(); renderPreview(); } };
+            input.click();
+          };
+        });
+        const last = state.messages[state.messages.length - 1];
+        if (last && last.type.endsWith('-call')) {
+          const overlay = document.createElement('div');
+          overlay.innerHTML = renderCallOverlay(last);
+          screen.appendChild(overlay.firstElementChild);
+        }
+      }
+
+      function exportImage() {
+        if (typeof html2canvas === 'undefined') return alert('html2canvas 未加载');
+        html2canvas($('wxScreen'), { scale: 1, width: 1080, height: 1920, backgroundColor: null, useCORS: true, logging: false }).then(canvas => {
+          canvas.toBlob(blob => saveAs(blob, 'wechat_screen_1080x1920.png'));
+        });
+      }
+      function exportVideo() {
+        if (typeof html2canvas === 'undefined') return alert('html2canvas 未加载');
+        html2canvas($('wxScreen'), { scale: 1, width: 1080, height: 1920, backgroundColor: null, useCORS: true, logging: false }).then(canvas => {
+          const stream = canvas.captureStream(30);
+          const mime = MediaRecorder.isTypeSupported('video/webm;codecs=vp9') ? 'video/webm;codecs=vp9' : 'video/webm;codecs=vp8';
+          const rec = new MediaRecorder(stream, { mimeType: mime });
+          const chunks = [];
+          rec.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
+          rec.onstop = () => { saveAs(new Blob(chunks, { type: 'video/webm' }), 'wechat_screen_1080x1920.webm'); };
+          rec.start();
+          setTimeout(() => rec.stop(), 3000);
+        });
+      }
+      function exportGif() {
+        if (typeof html2canvas === 'undefined' || typeof gifshot === 'undefined') return alert('导出库未加载');
+        html2canvas($('wxScreen'), { scale: 1, width: 1080, height: 1920, backgroundColor: null, useCORS: true, logging: false }).then(canvas => {
+          const dataUrl = canvas.toDataURL('image/png');
+          gifshot.createGIF({ images: [dataUrl], gifWidth: canvas.width, gifHeight: canvas.height, interval: 0.5 }, obj => {
+            if (obj.error) return alert('GIF 生成失败：' + (obj.errorCode || obj.errorMsg));
+            saveAs(dataURLtoBlob(obj.image), 'wechat_screen_1080x1920.gif');
+          });
+        });
+      }
+
+      renderUsers(); renderMsgList(); renderPreview();
+    };
+
+    // ---------- rendering ----------
+    let currentCat = 'all';
+    function renderTabs() {
+      const tabs = $('tabs'); tabs.innerHTML = '';
+      categories.forEach(cat => {
+        const btn = document.createElement('button');
+        btn.className = 'tab' + (cat.id === currentCat ? ' active' : '');
+        btn.textContent = cat.name;
+        btn.onclick = () => { currentCat = cat.id; renderTabs(); renderGrid(); };
+        tabs.appendChild(btn);
+      });
+    }
+    function renderGrid() {
+      const grid = $('grid'); grid.innerHTML = '';
+      const q = $('searchInput').value.trim().toLowerCase();
+      const list = tools.filter(t => (currentCat === 'all' || t.cat === currentCat) &&
+        (!q || t.name.includes(q) || t.desc.toLowerCase().includes(q)));
+      list.forEach(t => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `<h3>${t.name}</h3><p>${t.desc}</p><span class="badge">${categories.find(c => c.id === t.cat)?.name || ''}</span>`;
+        card.onclick = () => openTool(t.id);
+        grid.appendChild(card);
+      });
+      if (!list.length) grid.innerHTML = '<div class="empty" style="grid-column:1/-1;text-align:center;padding:40px;">没有找到匹配的工具</div>';
+    }
+    function openTool(id) {
+      const t = tools.find(x => x.id === id);
+      if (!t || !toolSetups[id]) return;
+      clearModal();
+      $('modalTitle').textContent = t.name;
+      $('modalDesc').textContent = t.desc;
+      toolSetups[id]();
+      $('modal').classList.add('open');
+    }
+    $('closeBtn').onclick = () => $('modal').classList.remove('open');
+    $('modal').onclick = e => { if (e.target === $('modal')) $('modal').classList.remove('open'); };
+    $('searchInput').oninput = renderGrid;
+
+    // ---------- starfield ----------
+    function makeStars() {
+      const stars = $('stars');
+      for (let i = 0; i < 130; i++) {
+        const s = document.createElement('div');
+        s.className = 'star';
+        const size = Math.random() < 0.8 ? Math.random() * 2 + 1 : Math.random() * 3 + 2;
+        s.style.width = size + 'px'; s.style.height = size + 'px';
+        s.style.left = Math.random() * 100 + '%';
+        s.style.top = Math.random() * 100 + '%';
+        s.style.setProperty('--dur', (Math.random() * 3 + 2) + 's');
+        s.style.setProperty('--op', (Math.random() * 0.6 + 0.3).toFixed(2));
+        if (Math.random() > 0.7) s.style.boxShadow = `0 0 ${size * 2}px ${['var(--accent1)', 'var(--accent2)', 'var(--accent3)', 'var(--accent4)'][Math.floor(Math.random() * 4)]}`;
+        stars.appendChild(s);
+      }
+      for (let i = 0; i < 4; i++) {
+        const sh = document.createElement('div');
+        sh.className = 'shooting';
+        sh.style.top = Math.random() * 60 + '%';
+        sh.style.left = Math.random() * 40 + '%';
+        sh.style.animationDelay = (i * 1.5) + 's';
+        sh.style.animationDuration = (4 + Math.random() * 3) + 's';
+        stars.appendChild(sh);
+      }
+    }
+
+    renderTabs(); renderGrid(); makeStars();
+  </script>
+</body>
+</html>
