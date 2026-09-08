@@ -2052,17 +2052,31 @@
         const high = state.export.highRes;
         return { scale: high ? 2 : 1, width: 1080, height: 1920, suffix: high ? '2160x3840' : '1080x1920' };
       }
+      function cloneScreenForCapture() {
+        const screen = $('wxScreen');
+        const capture = document.createElement('div');
+        capture.className = screen.className;
+        capture.style.cssText = 'position:fixed;left:-9999px;top:0;width:1080px;height:1920px;overflow:hidden;z-index:-1;';
+        capture.innerHTML = screen.innerHTML;
+        document.body.appendChild(capture);
+        return capture;
+      }
+      function removeCapture(el) { if (el && el.parentNode) el.parentNode.removeChild(el); }
       function exportImage() {
         if (typeof html2canvas === 'undefined') return alert('html2canvas 未加载');
         const cfg = getExportConfig();
-        html2canvas($('wxScreen'), { scale: cfg.scale, width: cfg.width, height: cfg.height, backgroundColor: null, useCORS: true, logging: false }).then(canvas => {
+        const capture = cloneScreenForCapture();
+        html2canvas(capture, { scale: cfg.scale, width: cfg.width, height: cfg.height, backgroundColor: null, useCORS: true, logging: false }).then(canvas => {
+          removeCapture(capture);
           canvas.toBlob(blob => saveAs(blob, 'wechat_screen_' + cfg.suffix + '.png'));
-        });
+        }).catch(e => { removeCapture(capture); alert('导出失败：' + e.message); });
       }
       function exportVideo() {
         if (typeof html2canvas === 'undefined') return alert('html2canvas 未加载');
         const cfg = getExportConfig();
-        html2canvas($('wxScreen'), { scale: cfg.scale, width: cfg.width, height: cfg.height, backgroundColor: null, useCORS: true, logging: false }).then(canvas => {
+        const capture = cloneScreenForCapture();
+        html2canvas(capture, { scale: cfg.scale, width: cfg.width, height: cfg.height, backgroundColor: null, useCORS: true, logging: false }).then(canvas => {
+          removeCapture(capture);
           const stream = canvas.captureStream(30);
           const mime = MediaRecorder.isTypeSupported('video/webm;codecs=vp9') ? 'video/webm;codecs=vp9' : 'video/webm;codecs=vp8';
           const rec = new MediaRecorder(stream, { mimeType: mime });
@@ -2071,18 +2085,20 @@
           rec.onstop = () => { saveAs(new Blob(chunks, { type: 'video/webm' }), 'wechat_screen_' + cfg.suffix + '.webm'); };
           rec.start();
           setTimeout(() => rec.stop(), 3000);
-        });
+        }).catch(e => { removeCapture(capture); alert('导出失败：' + e.message); });
       }
       function exportGif() {
         if (typeof html2canvas === 'undefined' || typeof gifshot === 'undefined') return alert('导出库未加载');
         const cfg = getExportConfig();
-        html2canvas($('wxScreen'), { scale: cfg.scale, width: cfg.width, height: cfg.height, backgroundColor: null, useCORS: true, logging: false }).then(canvas => {
+        const capture = cloneScreenForCapture();
+        html2canvas(capture, { scale: cfg.scale, width: cfg.width, height: cfg.height, backgroundColor: null, useCORS: true, logging: false }).then(canvas => {
+          removeCapture(capture);
           const dataUrl = canvas.toDataURL('image/png');
           gifshot.createGIF({ images: [dataUrl], gifWidth: canvas.width, gifHeight: canvas.height, interval: 0.5 }, obj => {
             if (obj.error) return alert('GIF 生成失败：' + (obj.errorCode || obj.errorMsg));
             saveAs(dataURLtoBlob(obj.image), 'wechat_screen_' + cfg.suffix + '.gif');
           });
-        });
+        }).catch(e => { removeCapture(capture); alert('导出失败：' + e.message); });
       }
 
       renderUsers(); renderMsgList(); renderPreview();
