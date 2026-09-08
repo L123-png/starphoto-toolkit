@@ -314,14 +314,14 @@
     .wx-amount-presets button { padding: 4px 10px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.05); color: var(--muted); cursor: pointer; font-size: 0.75rem; transition: 0.2s; }
     .wx-amount-presets button:hover { background: rgba(255,255,255,0.12); }
 
-    /* phone frame real 1080x1920 canvas, scaled to fit preview area */
-    .wx-phone { width: 1080px; height: 1920px; background: #0a0a0a; border-radius: 144px; position: relative; box-shadow: 0 72px 210px rgba(0,0,0,0.7), inset 0 0 0 3px rgba(255,255,255,0.12); display: flex; flex-direction: column; overflow: hidden; transform: scale(var(--wx-scale, 1)); transform-origin: top center; }
-    .wx-phone::before { content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 360px; height: 78px; background: #000; border-radius: 0 0 54px 54px; z-index: 10; }
-    .wx-screen { width: 1080px; height: 1920px; background: #ededed; overflow: hidden; display: flex; flex-direction: column; color: #000; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif; position: relative; font-size: 36px; }
+    /* phone frame tuya 1170x2532 canvas, scaled to fit preview area */
+    .wx-phone { width: 1170px; height: 2532px; background: #0a0a0a; border-radius: 156px; position: relative; box-shadow: 0 72px 210px rgba(0,0,0,0.7), inset 0 0 0 3px rgba(255,255,255,0.12); display: flex; flex-direction: column; overflow: hidden; transform: scale(var(--wx-scale, 1)); transform-origin: top center; }
+    .wx-phone::before { content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 390px; height: 84px; background: #000; border-radius: 0 0 58px 58px; z-index: 10; }
+    .wx-screen { width: 1170px; height: 2532px; background: #ededed; overflow: hidden; display: flex; flex-direction: column; color: #000; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif; position: relative; font-size: 36px; }
     .wx-screen.dark { background: #111; color: #fff; }
 
     /* status bar */
-    .wx-statusbar { height: 120px; display: flex; align-items: center; justify-content: space-between; padding: 0 54px 0 95px; font-size: 42px; font-weight: 600; background: #ededed; color: #000; }
+    .wx-statusbar { height: 132px; display: flex; align-items: center; justify-content: space-between; padding: 0 43px 0 95px; font-size: 45px; font-weight: 600; background: #ededed; color: #000; }
     .wx-screen.dark .wx-statusbar { background: #111; color: #fff; }
     .wx-status-left, .wx-status-right { display: flex; align-items: center; gap: 18px; }
     .wx-signal { display: flex; align-items: flex-end; gap: 5px; height: 36px; }
@@ -350,7 +350,7 @@
     .wx-battery .bolt { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); font-size: 28px; color: #fff; z-index: 1; }
 
     /* nav bar */
-    .wx-navbar { height: 144px; display: flex; align-items: center; justify-content: space-between; padding: 0 42px; background: #ededed; border-bottom: 1px solid #d5d5d5; position: relative; }
+    .wx-navbar { height: 132px; display: flex; align-items: center; justify-content: space-between; padding: 0 50px; background: #ededed; border-bottom: 1px solid #d5d5d5; position: relative; }
     .wx-screen.dark .wx-navbar { background: #111; border-bottom-color: #333; }
     .wx-nav-left { width: 210px; display: flex; align-items: center; }
     .wx-nav-center { flex: 1; display: flex; justify-content: center; }
@@ -444,7 +444,7 @@
 
     /* call screens */
     .wx-call-overlay { position: absolute; inset: 0; z-index: 100; display: flex; flex-direction: column; align-items: center; color: #fff; background: #111; }
-    .wx-call-overlay .call-statusbar { width: 100%; height: 120px; display: flex; align-items: center; justify-content: center; padding: 0 54px; font-size: 42px; font-weight: 600; color: #fff; padding-top: 6px; }
+    .wx-call-overlay .call-statusbar { width: 100%; height: 132px; display: flex; align-items: center; justify-content: center; padding: 0 54px; font-size: 45px; font-weight: 600; color: #fff; padding-top: 6px; }
     .wx-call-overlay .call-top-hint { margin-top: 24px; font-size: 39px; color: #999; }
     .wx-call-avatar { width: 330px; height: 330px; border-radius: 48px; overflow: hidden; background: #bbb; display: flex; align-items: center; justify-content: center; font-size: 108px; color: #fff; margin-top: 210px; box-shadow: 0 24px 90px rgba(0,0,0,0.4); }
     .wx-call-avatar img { width: 100%; height: 100%; object-fit: cover; }
@@ -1791,37 +1791,37 @@
           const pad = 40;
           const maxW = right.clientWidth - pad;
           const maxH = right.clientHeight - pad;
-          const scale = Math.min(maxW / 1080, maxH / 1920, 1);
+          const scale = Math.min(maxW / 1170, maxH / 2532, 1);
           phone.style.setProperty('--wx-scale', scale.toFixed(4));
         });
       }
 
       function exportImage() {
         if (typeof html2canvas === 'undefined') return alert('html2canvas 未加载');
-        html2canvas($('wxScreen'), { scale: 1, width: 1080, height: 1920, backgroundColor: null, useCORS: true, logging: false }).then(canvas => {
-          canvas.toBlob(blob => saveAs(blob, 'wechat_screen_1080x1920.png'));
+        html2canvas($('wxScreen'), { scale: 1, width: 1170, height: 2532, backgroundColor: null, useCORS: true, logging: false }).then(canvas => {
+          canvas.toBlob(blob => saveAs(blob, 'wechat_screen_1170x2532.png'));
         });
       }
       function exportVideo() {
         if (typeof html2canvas === 'undefined') return alert('html2canvas 未加载');
-        html2canvas($('wxScreen'), { scale: 1, width: 1080, height: 1920, backgroundColor: null, useCORS: true, logging: false }).then(canvas => {
+        html2canvas($('wxScreen'), { scale: 1, width: 1170, height: 2532, backgroundColor: null, useCORS: true, logging: false }).then(canvas => {
           const stream = canvas.captureStream(30);
           const mime = MediaRecorder.isTypeSupported('video/webm;codecs=vp9') ? 'video/webm;codecs=vp9' : 'video/webm;codecs=vp8';
           const rec = new MediaRecorder(stream, { mimeType: mime });
           const chunks = [];
           rec.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
-          rec.onstop = () => { saveAs(new Blob(chunks, { type: 'video/webm' }), 'wechat_screen_1080x1920.webm'); };
+          rec.onstop = () => { saveAs(new Blob(chunks, { type: 'video/webm' }), 'wechat_screen_1170x2532.webm'); };
           rec.start();
           setTimeout(() => rec.stop(), 3000);
         });
       }
       function exportGif() {
         if (typeof html2canvas === 'undefined' || typeof gifshot === 'undefined') return alert('导出库未加载');
-        html2canvas($('wxScreen'), { scale: 1, width: 1080, height: 1920, backgroundColor: null, useCORS: true, logging: false }).then(canvas => {
+        html2canvas($('wxScreen'), { scale: 1, width: 1170, height: 2532, backgroundColor: null, useCORS: true, logging: false }).then(canvas => {
           const dataUrl = canvas.toDataURL('image/png');
           gifshot.createGIF({ images: [dataUrl], gifWidth: canvas.width, gifHeight: canvas.height, interval: 0.5 }, obj => {
             if (obj.error) return alert('GIF 生成失败：' + (obj.errorCode || obj.errorMsg));
-            saveAs(dataURLtoBlob(obj.image), 'wechat_screen_1080x1920.gif');
+            saveAs(dataURLtoBlob(obj.image), 'wechat_screen_1170x2532.gif');
           });
         });
       }
