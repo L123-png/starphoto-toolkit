@@ -316,88 +316,131 @@
 
     /* phone frame real 1080x1920 canvas */
     .wx-phone { width: 1080px; height: 1920px; background: #0a0a0a; border-radius: 144px; position: relative; box-shadow: 0 72px 210px rgba(0,0,0,0.7), inset 0 0 0 3px rgba(255,255,255,0.12); display: flex; flex-direction: column; overflow: hidden; }
-    .wx-phone::before { content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 360px; height: 84px; background: #000; border-radius: 0 0 54px 54px; z-index: 10; }
-    .wx-phone::after { content: ''; position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%); width: 360px; height: 12px; background: rgba(255,255,255,0.25); border-radius: 2997px; z-index: 10; }
-    .wx-screen { width: 1080px; height: 1920px; background: #ededed; overflow: hidden; display: flex; flex-direction: column; color: #000; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif; position: relative; }
+    .wx-phone::before { content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 360px; height: 78px; background: #000; border-radius: 0 0 54px 54px; z-index: 10; }
+    .wx-screen { width: 1080px; height: 1920px; background: #ededed; overflow: hidden; display: flex; flex-direction: column; color: #000; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif; position: relative; font-size: 36px; }
     .wx-screen.dark { background: #111; color: #fff; }
-    .wx-statusbar { height: 120px; display: flex; align-items: center; justify-content: space-between; padding: 0 54px; font-size: 42px; font-weight: 600; background: #ededed; color: #000; padding-top: 6px; }
+
+    /* status bar */
+    .wx-statusbar { height: 120px; display: flex; align-items: center; justify-content: space-between; padding: 0 54px 0 95px; font-size: 42px; font-weight: 600; background: #ededed; color: #000; }
     .wx-screen.dark .wx-statusbar { background: #111; color: #fff; }
     .wx-status-left, .wx-status-right { display: flex; align-items: center; gap: 18px; }
-    .wx-signal { display: flex; align-items: flex-end; gap: 6px; height: 42px; }
-    .wx-signal i { width: 9px; background: #000; border-radius: 3px; opacity: 0.22; }
+    .wx-signal { display: flex; align-items: flex-end; gap: 5px; height: 36px; }
+    .wx-signal i { width: 8px; background: #000; border-radius: 2px; opacity: 0.22; }
     .wx-screen.dark .wx-signal i { background: #fff; }
     .wx-signal i.on { opacity: 1; }
-    .wx-signal i:nth-child(1) { height: 12px; }
-    .wx-signal i:nth-child(2) { height: 18px; }
-    .wx-signal i:nth-child(3) { height: 24px; }
-    .wx-signal i:nth-child(4) { height: 30px; }
+    .wx-signal i:nth-child(1) { height: 10px; }
+    .wx-signal i:nth-child(2) { height: 16px; }
+    .wx-signal i:nth-child(3) { height: 22px; }
+    .wx-signal i:nth-child(4) { height: 28px; }
     .wx-wifi { display: flex; flex-direction: column; align-items: center; gap: 3px; }
-    .wx-wifi i { width: 48px; height: 21px; border-radius: 30px 30px 0 0; border-top: 6px solid #000; border-left: 6px solid #000; border-right: 6px solid #000; opacity: 0.22; box-sizing: border-box; }
+    .wx-wifi i { width: 42px; height: 18px; border-radius: 21px 21px 0 0; border-top: 5px solid #000; border-left: 5px solid #000; border-right: 5px solid #000; opacity: 0.22; box-sizing: border-box; }
     .wx-screen.dark .wx-wifi i { border-color: #fff; }
     .wx-wifi i.on { opacity: 1; }
-    .wx-wifi i:nth-child(2) { width: 30px; height: 15px; }
-    .wx-wifi i:nth-child(3) { width: 15px; height: 12px; border-radius: 6px 6px 0 0; border-width: 4.5px; }
-    .wx-battery { display: flex; align-items: center; gap: 9px; }
-    .wx-battery-body { width: 75px; height: 33px; border: 3px solid #000; border-radius: 6px; padding: 3px; position: relative; }
+    .wx-wifi i:nth-child(2) { width: 27px; height: 12px; }
+    .wx-wifi i:nth-child(3) { width: 13px; height: 9px; border-radius: 4.5px 4.5px 0 0; border-width: 4px; }
+    .wx-net { font-size: 36px; font-weight: 500; }
+    .wx-battery { display: flex; align-items: center; gap: 9px; position: relative; }
+    .wx-battery-body { width: 75px; height: 36px; border: 3px solid #000; border-radius: 6px; padding: 4px 16px 4px 4px; position: relative; }
     .wx-screen.dark .wx-battery-body { border-color: #fff; }
-    .wx-battery-body::after { content: ''; position: absolute; right: -9px; top: 6px; width: 6px; height: 15px; background: #000; border-radius: 0 3px 3px 0; }
+    .wx-battery-body::after { content: ''; position: absolute; right: -8px; top: 8px; width: 6px; height: 16px; background: #000; border-radius: 0 3px 3px 0; }
     .wx-screen.dark .wx-battery-body::after { background: #fff; }
     .wx-battery-fill { height: 100%; background: #000; border-radius: 3px; }
     .wx-screen.dark .wx-battery-fill { background: #fff; }
-    .wx-navbar { height: 156px; display: flex; align-items: center; justify-content: space-between; padding: 0 42px; background: #ededed; border-bottom: 3px solid #d6d6d6; position: relative; }
+    .wx-battery.charging .wx-battery-fill { background: #65c466; }
+    .wx-battery .bolt { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); font-size: 28px; color: #fff; z-index: 1; }
+
+    /* nav bar */
+    .wx-navbar { height: 144px; display: flex; align-items: center; justify-content: space-between; padding: 0 42px; background: #ededed; border-bottom: 1px solid #d5d5d5; position: relative; }
     .wx-screen.dark .wx-navbar { background: #111; border-bottom-color: #333; }
-    .wx-nav-left, .wx-nav-right { display: flex; align-items: center; gap: 18px; min-width: 210px; }
-    .wx-nav-right { justify-content: flex-end; }
-    .wx-nav-title { position: absolute; left: 50%; transform: translateX(-50%); font-size: 54px; font-weight: 600; color: #000; max-width: 630px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .wx-nav-left { width: 210px; display: flex; align-items: center; }
+    .wx-nav-center { flex: 1; display: flex; justify-content: center; }
+    .wx-nav-title { font-size: 51px; font-weight: 500; color: #000; display: flex; align-items: center; max-width: 630px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .wx-screen.dark .wx-nav-title { color: #fff; }
-    .wx-back { width: 33px; height: 33px; border-left: 7.5px solid #000; border-bottom: 7.5px solid #000; transform: rotate(45deg); margin-right: 6px; }
+    .wx-nav-right { width: 210px; display: flex; justify-content: flex-end; }
+    .wx-back { width: 27px; height: 52px; border-left: 7.5px solid #000; border-bottom: 7.5px solid #000; transform: rotate(45deg); margin-right: 6px; }
     .wx-screen.dark .wx-back { border-color: #fff; }
-    .wx-dots { display: flex; gap: 9px; }
+    .wx-unread { background: #d5d5d5; color: #000; font-size: 36px; min-width: 72px; height: 72px; border-radius: 36px; display: flex; align-items: center; justify-content: center; padding: 0 24px; margin-left: 24px; }
+    .wx-screen.dark .wx-unread { background: #555; color: #fff; }
+    .wx-earpiece { width: 31px; height: 42px; margin-left: 15px; display: flex; align-items: center; justify-content: center; }
+    .wx-earpiece svg { width: 100%; height: 100%; fill: currentColor; }
+    .wx-dots { display: flex; gap: 12px; align-items: center; }
     .wx-dots i { width: 12px; height: 12px; background: #000; border-radius: 50%; }
     .wx-screen.dark .wx-dots i { background: #fff; }
-    .wx-unread { background: #ff3b30; color: #fff; font-size: 33px; min-width: 54px; height: 54px; border-radius: 2997px; display: flex; align-items: center; justify-content: center; padding: 0 15px; }
-    .wx-chat { background: #ebebeb; padding: 42px; display: flex; flex-direction: column; gap: 54px; flex: 1; overflow-y: auto; position: relative; }
+
+    /* chat body */
+    .wx-chat { background: #ededed; padding: 36px; display: flex; flex-direction: column; flex: 1; overflow-y: auto; position: relative; }
     .wx-screen.dark .wx-chat { background: #0a0a0a; }
-    .wx-time { text-align: center; color: #999; font-size: 39px; }
-    .wx-screen.dark .wx-time { color: #666; }
-    .wx-msg-row { display: flex; align-items: flex-start; gap: 30px; }
-    .wx-msg-row.right { flex-direction: row-reverse; }
-    .wx-avatar { width: 132px; height: 132px; border-radius: 21px; overflow: hidden; background: #bbb; display: flex; align-items: center; justify-content: center; font-size: 39px; color: #fff; flex-shrink: 0; position: relative; cursor: pointer; border: 6px solid transparent; }
+    .wx-time { display: flex; justify-content: center; margin-bottom: 50px; }
+    .wx-time span { background: rgba(255,255,255,0.5); color: #151414; padding: 10px 17px; border-radius: 15px; font-size: 36px; }
+    .wx-screen.dark .wx-time span { background: rgba(255,255,255,0.12); color: #888; }
+    .wx-msg-row { display: flex; align-items: flex-start; margin-bottom: 50px; position: relative; }
+    .wx-msg-row.left { justify-content: flex-start; }
+    .wx-msg-row.right { justify-content: flex-end; }
+    .wx-avatar { width: 123px; height: 123px; border-radius: 15px; overflow: hidden; background: #f1f1f1; display: flex; align-items: center; justify-content: center; font-size: 48px; color: #999; position: absolute; top: 0; cursor: pointer; }
+    .wx-msg-row.left .wx-avatar { left: 0; }
+    .wx-msg-row.right .wx-avatar { right: 0; }
     .wx-avatar img { width: 100%; height: 100%; object-fit: cover; }
     .wx-bubble-wrap { max-width: 720px; display: flex; flex-direction: column; }
-    .wx-bubble { padding: 30px 36px; border-radius: 21px; background: #fff; color: #000; font-size: 48px; line-height: 1.45; word-break: break-word; position: relative; }
-    .wx-msg-row.right .wx-bubble { background: #95ec69; }
+    .wx-msg-row.left .wx-bubble-wrap { margin-left: 160px; margin-right: 140px; }
+    .wx-msg-row.right .wx-bubble-wrap { margin-left: 140px; margin-right: 160px; }
+    .wx-bubble { padding: 28px 38px; border-radius: 15px; background: #fff; color: #000; font-size: 48px; line-height: normal; word-break: break-all; position: relative; display: inline-block; min-height: 123px; }
+    .wx-msg-row.right .wx-bubble { background: #98e970; }
     .wx-screen.dark .wx-bubble { background: #2c2c2c; color: #fff; }
     .wx-screen.dark .wx-msg-row.right .wx-bubble { background: #1f6b1f; }
-    .wx-bubble::before { content: ''; position: absolute; top: 42px; width: 0; height: 0; }
-    .wx-msg-row.left .wx-bubble::before { left: -18px; border-right: 18px solid #fff; border-top: 15px solid transparent; border-bottom: 15px solid transparent; }
-    .wx-msg-row.right .wx-bubble::before { right: -18px; border-left: 18px solid #95ec69; border-top: 15px solid transparent; border-bottom: 15px solid transparent; }
-    .wx-screen.dark .wx-msg-row.left .wx-bubble::before { border-right-color: #2c2c2c; }
-    .wx-screen.dark .wx-msg-row.right .wx-bubble::before { border-left-color: #1f6b1f; }
-    .wx-img-msg { max-width: 660px; border-radius: 21px; overflow: hidden; }
-    .wx-img-msg img { width: 100%; display: block; }
+    .wx-bubble::after { content: ''; background: #fff; width: 24px; height: 24px; border-bottom-left-radius: 4px; top: 50px; left: -12px; position: absolute; transform: rotate(45deg); }
+    .wx-msg-row.right .wx-bubble::after { background: #98e970; left: auto; right: -10px; border-top-right-radius: 4px; border-bottom-left-radius: 0; }
+    .wx-screen.dark .wx-msg-row.left .wx-bubble::after { background: #2c2c2c; }
+    .wx-screen.dark .wx-msg-row.right .wx-bubble::after { background: #1f6b1f; }
+
+    /* image message */
+    .wx-img-msg { padding: 0; background: transparent; border: 1px solid #d5d5d5; overflow: hidden; max-width: 660px; }
+    .wx-img-msg img { max-width: 420px; max-height: 420px; display: block; }
+
+    /* voice message */
     .wx-voice { display: flex; align-items: center; gap: 24px; min-width: 240px; }
-    .wx-voice-icon { width: 54px; height: 54px; display: flex; align-items: center; justify-content: center; }
-    .wx-voice-icon svg { width: 48px; height: 48px; fill: currentColor; }
-    .wx-voice-unread { width: 27px; height: 27px; background: #ff3b30; border-radius: 50%; margin-left: 6px; }
-    .wx-redpacket { width: 720px; background: #fa5151; border-radius: 21px; color: #fff; overflow: hidden; }
-    .wx-redpacket-head { display: flex; align-items: center; gap: 36px; padding: 42px; border-bottom: 3px solid rgba(255,255,255,0.2); }
-    .wx-redpacket-icon { width: 132px; height: 132px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 78px; }
-    .wx-redpacket-main { font-size: 51px; }
-    .wx-redpacket-sub { font-size: 39px; opacity: 0.85; margin-top: 6px; }
-    .wx-redpacket-foot { background: #f2f2f2; color: #999; font-size: 36px; padding: 18px 42px; }
-    .wx-screen.dark .wx-redpacket-foot { background: #1a1a1a; color: #777; }
-    .wx-transfer { width: 720px; background: #07c160; border-radius: 21px; color: #fff; overflow: hidden; }
-    .wx-transfer-head { display: flex; align-items: center; gap: 36px; padding: 42px; border-bottom: 3px solid rgba(255,255,255,0.2); }
-    .wx-transfer-icon { width: 132px; height: 132px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 78px; }
-    .wx-transfer-main { font-size: 51px; }
-    .wx-transfer-amount { font-size: 66px; font-weight: 600; margin-top: 6px; }
-    .wx-transfer-foot { background: #f2f2f2; color: #999; font-size: 36px; padding: 18px 42px; }
-    .wx-screen.dark .wx-transfer-foot { background: #1a1a1a; color: #777; }
-    .wx-inputbar { height: 168px; background: #f7f7f7; border-top: 3px solid #e5e5e5; display: flex; align-items: center; gap: 30px; padding: 0 42px; flex-shrink: 0; }
+    .wx-voice-wave { width: 34px; height: 40px; display: flex; align-items: flex-end; gap: 4px; }
+    .wx-voice-wave i { width: 6px; background: currentColor; border-radius: 3px; }
+    .wx-voice-wave i:nth-child(1) { height: 14px; }
+    .wx-voice-wave i:nth-child(2) { height: 26px; }
+    .wx-voice-wave i:nth-child(3) { height: 40px; }
+    .wx-voice span { font-size: 42px; }
+    .wx-voice-unread { width: 25px; height: 25px; background: #e75e58; border-radius: 50%; margin-left: 24px; }
+
+    /* transfer / redpacket card */
+    .wx-trans { width: 720px; padding: 0; background: #f79c46; color: #fff; }
+    .wx-msg-row.right .wx-trans { background: #f79c46; }
+    .wx-trans.get { background: #f8e2c6; }
+    .wx-msg-row.right .wx-trans.get { background: #f8e2c6; }
+    .wx-trans::after { background: #f79c46; }
+    .wx-trans.get::after { background: #f8e2c6; }
+    .wx-trans-content { display: flex; height: 192px; align-items: center; position: relative; }
+    .wx-trans-content::after { content: ''; background: #f0b36f; position: absolute; width: 100%; height: 1px; bottom: 0; }
+    .wx-trans.get .wx-trans-content::after { background: #f9e7d1; }
+    .wx-trans-icon { width: 120px; height: 120px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.2); border-radius: 12px; font-size: 72px; }
+    .wx-trans-content.redp .wx-trans-icon { width: 102px; }
+    .wx-trans-content > div { flex: 1; display: flex; flex-direction: column; margin-left: 30px; overflow: hidden; }
+    .wx-trans-content > div span { font-size: 48px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .wx-trans-content > div font { font-size: 36px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 6px; }
+    .wx-trans-bottom { height: 71px; display: flex; align-items: center; padding: 0 38px; }
+    .wx-trans-bottom span { font-size: 36px; color: #faecda; }
+    .wx-trans.get .wx-trans-bottom span { color: #fff; }
+
+    /* input bar + home indicator */
+    .wx-inputbar { height: 167px; background: #f7f7f7; border-top: 1px solid #e5e5e5; display: flex; align-items: center; flex-shrink: 0; }
     .wx-screen.dark .wx-inputbar { background: #111; border-top-color: #333; }
-    .wx-inputbar .c { flex: 1; height: 108px; background: #fff; border-radius: 15px; border: 3px solid #e5e5e5; }
-    .wx-screen.dark .wx-inputbar .c { background: #222; border-color: #444; }
+    .wx-input-btn { width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; color: #1a1a1a; cursor: pointer; flex-shrink: 0; }
+    .wx-input-btn.voice { margin-left: 32px; }
+    .wx-input-btn.more { margin: 0 32px 0 39px; }
+    .wx-input-btn svg { width: 56px; height: 56px; }
+    .wx-screen.dark .wx-input-btn { color: #aaa; }
+    .wx-input { flex: 1; height: 120px; background: #fff; border-radius: 15px; margin: 0 32px; }
+    .wx-screen.dark .wx-input { background: #222; }
+    .wx-input.say { color: #1a1a1a; font-size: 48px; font-weight: 500; text-align: center; line-height: 120px; }
+    .wx-screen.dark .wx-input.say { color: #aaa; }
+    .wx-homebar { height: 102px; background: #f6f6f6; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .wx-screen.dark .wx-homebar { background: #111; }
+    .wx-homebar i { width: 402px; height: 15px; background: rgba(0,0,0,0.35); border-radius: 999px; }
+    .wx-screen.dark .wx-homebar i { background: rgba(255,255,255,0.35); }
 
     /* call screens */
     .wx-call-overlay { position: absolute; inset: 0; z-index: 100; display: flex; flex-direction: column; align-items: center; color: #fff; background: #111; }
@@ -419,9 +462,6 @@
     .wx-call-record { align-self: center; display: inline-flex; align-items: center; gap: 18px; padding: 18px 36px; border-radius: 12px; background: #dadada; color: #666; font-size: 36px; margin: 6px 0; }
     .wx-screen.dark .wx-call-record { background: #2c2c2c; color: #999; }
     .wx-call-record .icon { font-size: 33px; opacity: 0.85; }
-    .wx-input-btn { width: 84px; height: 84px; border-radius: 50%; border: 3px solid #999; display: flex; align-items: center; justify-content: center; color: #555; cursor: pointer; flex-shrink: 0; }
-    .wx-input-btn svg { width: 48px; height: 48px; }
-    .wx-screen.dark .wx-input-btn { border-color: #666; color: #aaa; }
     .wx-emoji-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 8px; margin-top: 12px; }
     .wx-emoji-grid button { font-size: 1.4rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 6px; cursor: pointer; transition: 0.15s; }
     .wx-emoji-grid button:hover { background: rgba(255,255,255,0.12); transform: scale(1.1); }
@@ -1683,18 +1723,19 @@
       }
 
       function renderMessage(msg) {
-        if (msg.type === 'time') return `<div class="wx-time">${escapeHtml(msg.time)}</div>`;
+        if (msg.type === 'time') return `<div class="wx-time"><span>${escapeHtml(msg.time)}</span></div>`;
         if (msg.type.endsWith('-call')) return renderCallRecord(msg);
         const user = state.users.find(u => u.id === msg.senderId) || state.users[0];
         const isMe = msg.senderId === 'u0';
         const avatar = user.avatar ? `<img src="${user.avatar}" alt="">` : `<span>${escapeHtml(user.name.slice(0, 1))}</span>`;
+        const voiceWave = `<span class="wx-voice-wave"><i></i><i></i><i></i></span>`;
         let content = '';
         switch (msg.type) {
           case 'text': content = `<div class="wx-bubble">${escapeHtml(msg.content)}</div>`; break;
-          case 'image': content = `<div class="wx-img-msg">${msg.image ? `<img src="${msg.image}">` : ''}</div>`; break;
-          case 'voice': content = `<div class="wx-bubble wx-voice"><span class="wx-voice-icon"><svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V6c0-1.66-1.34-3-3-3S9 4.34 9 6v5c0 1.66 1.34 3 3 3zm4.5-3c0 2.48-2.02 4.5-4.5 4.5s-4.5-2.02-4.5-4.5H6c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-1.5z"/></svg></span><span>${msg.seconds}"</span>${!isMe && !msg.isRead ? '<span class="wx-voice-unread"></span>' : ''}</div>`; break;
-          case 'redpacket': content = `<div class="wx-redpacket"><div class="wx-redpacket-head"><div class="wx-redpacket-icon">🧧</div><div><div class="wx-redpacket-main">${escapeHtml(msg.remark || '恭喜发财，大吉大利')}</div><div class="wx-redpacket-sub">微信红包</div></div></div><div class="wx-redpacket-foot">微信红包</div></div>`; break;
-          case 'transfer': content = `<div class="wx-transfer"><div class="wx-transfer-head"><div class="wx-transfer-icon">💰</div><div><div class="wx-transfer-main">${escapeHtml(msg.remark || '转账')}</div><div class="wx-transfer-amount">¥${escapeHtml(msg.amount)}</div></div></div><div class="wx-transfer-foot">微信转账</div></div>`; break;
+          case 'image': content = `<div class="wx-bubble wx-img-msg">${msg.image ? `<img src="${msg.image}">` : ''}</div>`; break;
+          case 'voice': content = `<div class="wx-bubble wx-voice">${isMe ? `<span>${msg.seconds}"</span>${voiceWave}` : `${voiceWave}<span>${msg.seconds}"</span>${!msg.isRead ? '<span class="wx-voice-unread"></span>' : ''}`}</div>`; break;
+          case 'redpacket': content = `<div class="wx-bubble wx-trans"><div class="wx-trans-content redp"><div class="wx-trans-icon">🧧</div><div><span>${escapeHtml(msg.remark || '恭喜发财，大吉大利')}</span><font>微信红包</font></div></div><div class="wx-trans-bottom"><span>微信红包</span></div></div>`; break;
+          case 'transfer': content = `<div class="wx-bubble wx-trans"><div class="wx-trans-content"><div class="wx-trans-icon">💰</div><div><span>¥${escapeHtml(msg.amount)}</span><font>${escapeHtml(msg.remark || '转账')}</font></div></div><div class="wx-trans-bottom"><span>微信转账</span></div></div>`; break;
         }
         return `<div class="wx-msg-row ${isMe ? 'right' : 'left'}"><div class="wx-avatar" style="border-color:${user.frameColor}">${avatar}</div><div class="wx-bubble-wrap">${content}</div></div>`;
       }
@@ -1709,17 +1750,18 @@
         const s = state.status;
         screen.className = 'wx-screen ' + (s.theme === 'dark' ? 'dark' : 'light');
         const sigHtml = `<div class="wx-signal">${[1, 2, 3, 4].map(i => `<i class="${i <= s.signal ? 'on' : ''}"></i>`).join('')}</div>`;
-        const netHtml = s.network === 'wifi' ? `<div class="wx-wifi">${[1, 2, 3].map(i => `<i class="${i <= s.wifi ? 'on' : ''}"></i>`).join('')}</div>` : `<span>${s.network.toUpperCase()}</span>`;
-        const batteryHtml = `<div class="wx-battery"><div class="wx-battery-body"><div class="wx-battery-fill" style="width:${s.battery}%"></div></div>${s.charging ? '⚡' : ''}<span>${s.battery}%</span></div>`;
-        const statusHtml = `<div class="wx-statusbar"><div class="wx-status-left"><span>${escapeHtml(s.time)}</span>${sigHtml}${netHtml}</div><div class="wx-status-right">${s.earpiece ? '🎧' : ''}${batteryHtml}</div></div>`;
-        const navHtml = `<div class="wx-navbar"><div class="wx-nav-left"><div class="wx-back"></div>${s.unread > 0 ? `<span class="wx-unread">${s.unread}</span>` : ''}</div><div class="wx-nav-title">${escapeHtml(s.title)}</div><div class="wx-nav-right">${s.voice ? '<span title="听筒模式">🔊</span>' : ''}<div class="wx-dots"><i></i><i></i><i></i></div></div></div>`;
+        const netHtml = s.network === 'wifi' ? `<div class="wx-wifi">${[1, 2, 3].map(i => `<i class="${i <= s.wifi ? 'on' : ''}"></i>`).join('')}</div>` : `<span class="wx-net">${s.network.toUpperCase()}</span>`;
+        const batteryHtml = `<div class="wx-battery ${s.charging ? 'charging' : ''}"><div class="wx-battery-body"><div class="wx-battery-fill" style="width:${s.battery}%"></div>${s.charging ? '<span class="bolt">⚡</span>' : ''}</div><span>${s.battery}%</span></div>`;
+        const statusHtml = `<div class="wx-statusbar"><div class="wx-status-left"><span>${escapeHtml(s.time)}</span>${sigHtml}${netHtml}</div><div class="wx-status-right">${batteryHtml}</div></div>`;
+        const earpieceIcon = `<span class="wx-earpiece" title="听筒模式"><svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg></span>`;
+        const navHtml = `<div class="wx-navbar"><div class="wx-nav-left"><div class="wx-back"></div>${s.unread > 0 ? `<span class="wx-unread">${s.unread}</span>` : ''}</div><div class="wx-nav-center"><div class="wx-nav-title">${escapeHtml(s.title)}${s.earpiece ? earpieceIcon : ''}</div></div><div class="wx-nav-right"><div class="wx-dots"><i></i><i></i><i></i></div></div></div>`;
         const bgStyle = s.bg ? `background-image:url(${s.bg});background-size:cover;background-position:center;` : '';
         const msgsHtml = state.messages.map(renderMessage).join('');
         const chatHtml = `<div class="wx-chat" style="${bgStyle}">${msgsHtml}</div>`;
         const voiceIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>`;
         const emojiIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>`;
         const plusIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>`;
-        const inputBar = `<div class="wx-inputbar"><div class="wx-input-btn">${voiceIcon}</div><div class="c"></div><div class="wx-input-btn">${emojiIcon}</div><div class="wx-input-btn">${plusIcon}</div></div>`;
+        const inputBar = `<div class="wx-inputbar"><div class="wx-input-btn voice">${voiceIcon}</div><div class="wx-input ${s.voice ? 'say' : ''}">${s.voice ? '按住 说话' : ''}</div><div class="wx-input-btn emoji">${emojiIcon}</div><div class="wx-input-btn more">${plusIcon}</div></div><div class="wx-homebar"><i></i></div>`;
         screen.innerHTML = statusHtml + navHtml + chatHtml + inputBar;
         screen.querySelectorAll('.wx-avatar').forEach((av, idx) => {
           const msg = state.messages.filter(m => m.type !== 'time' && !m.type.endsWith('-call'))[idx];
