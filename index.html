@@ -10,6 +10,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gifshot/0.3.2/gifshot.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/spark-md5/3.0.2/spark-md5.min.js"></script>
   <style>
     :root {
       --bg: #050518;
@@ -299,6 +300,27 @@
     .wx-theme-switch { display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.04); border-radius: 999px; padding: 5px 5px 5px 14px; font-size: 0.82rem; color: var(--muted); }
     .wx-theme-btn { border: none; background: transparent; color: var(--muted); cursor: pointer; padding: 5px 12px; border-radius: 999px; transition: 0.2s; font-size: 0.8rem; }
     .wx-theme-btn.active { background: linear-gradient(90deg, var(--accent2), var(--accent3)); color: #fff; box-shadow: 0 0 12px rgba(188,19,254,0.35); }
+
+    /* MD5 modifier */
+    .md5-drop { border: 2px dashed rgba(255,255,255,0.18); border-radius: 18px; padding: 40px 20px; text-align: center; background: rgba(0,0,0,0.18); transition: 0.2s; cursor: pointer; }
+    .md5-drop.dragover { border-color: var(--accent1); background: rgba(0,240,255,0.08); }
+    .md5-drop h4 { margin: 0 0 10px; font-size: 1.1rem; color: #fff; }
+    .md5-drop p { margin: 0; color: var(--muted); font-size: 0.85rem; }
+    .md5-or { margin: 14px 0; font-size: 0.8rem; color: var(--muted); }
+    .md5-file-btns { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+    .md5-file-btns input { display: none; }
+    .md5-list { max-height: 320px; overflow-y: auto; margin-top: 16px; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; background: rgba(0,0,0,0.18); }
+    .md5-list table { width: 100%; font-size: 0.78rem; }
+    .md5-list th { position: sticky; top: 0; background: #0b0e26; color: var(--accent1); z-index: 1; }
+    .md5-list td { padding: 8px; border-bottom: 1px solid rgba(255,255,255,0.06); color: var(--text); }
+    .md5-list td.status { white-space: nowrap; }
+    .md5-list td.status.done { color: var(--accent4); }
+    .md5-list td.status.error { color: #ff6b6b; }
+    .md5-hash { font-family: monospace; color: var(--muted); font-size: 0.72rem; }
+    .md5-progress { height: 6px; border-radius: 999px; background: rgba(255,255,255,0.08); margin-top: 14px; overflow: hidden; }
+    .md5-progress i { display: block; height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent2), var(--accent3)); transition: width 0.2s; }
+    .md5-actions { display: flex; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
+
     .wx-msglist { max-height: 220px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
     .wx-msgitem { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07); border-radius: 12px; padding: 10px; }
     .wx-msgitem-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 0.8rem; color: var(--muted); }
@@ -464,8 +486,16 @@
     .wx-screen.dark .wx-call-record { background: #2c2c2c; color: #999; }
     .wx-call-record .icon { font-size: 30px; opacity: 0.85; }
     .wx-emoji-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 8px; margin-top: 12px; }
-    .wx-emoji-grid button { font-size: 1.4rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 6px; cursor: pointer; transition: 0.15s; }
+    .wx-emoji-grid button { font-size: 1.4rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 6px; cursor: pointer; transition: 0.15s; display: flex; align-items: center; justify-content: center; }
     .wx-emoji-grid button:hover { background: rgba(255,255,255,0.12); transform: scale(1.1); }
+    .wx-emoji-grid button img { width: 32px; height: 32px; pointer-events: none; }
+    .wx-emoji-img { width: 1em; height: 1em; vertical-align: -0.15em; display: inline-block; }
+
+    /* export panel */
+    .wx-export-panel { width: 100%; max-width: 360px; background: rgba(0,0,0,0.22); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 14px; }
+    .wx-export-panel h4 { margin: 0 0 12px; font-size: 0.95rem; color: var(--accent1); }
+    .wx-export-toggles { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 14px; }
+    .wx-export-btns { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
 
     @media (max-width: 1000px) {
       .wx-layout { grid-template-columns: 1fr; }
@@ -559,6 +589,7 @@
       { id: 'img-extract', cat: 'other', name: 'IMG标签图像链接提取', desc: '从 HTML 源码中提取所有 IMG 的 src。' },
       { id: 'dpi', cat: 'other', name: '修改分辨率DPI', desc: '修改 PNG/JPEG 的 DPI 元数据（浏览器端实现）。' },
       { id: 'resize', cat: 'other', name: '图片尺寸大小修改', desc: '按指定宽高等比或自由缩放图片。' },
+      { id: 'md5-modifier', cat: 'other', name: '文件MD5修改器', desc: '批量修改图片/视频文件的 MD5，支持拖拽文件夹或批量上传，处理完成后打包下载。' },
       { id: 'wechat-generator', cat: 'wechat', name: '微信对话生成器', desc: '模拟 iPhone 微信聊天界面，支持文字、图片、语音、红包、转账消息并导出 PNG/视频/GIF。' }
     ];
 
@@ -1402,6 +1433,176 @@
       });
     };
 
+    toolSetups['md5-modifier'] = () => {
+      const controls = $('modalControls');
+      controls.innerHTML = '';
+      $('runBtn').style.display = 'none';
+      $('downloadBtn').style.display = 'none';
+      const actions = document.querySelector('.actions'); if (actions) actions.style.display = 'none';
+      $('modalPreview').style.display = 'none';
+
+      const mediaTypes = new Set(['jpg','jpeg','png','gif','webp','bmp','heic','heif','mp4','mov','mkv','avi','webm','m4v','3gp','3g2']);
+      const isMedia = f => {
+        if (f.type.startsWith('image/') || f.type.startsWith('video/')) return true;
+        const ext = getExt(f.name);
+        return mediaTypes.has(ext);
+      };
+      const encoder = new TextEncoder();
+      const decodeText = new TextDecoder();
+      const makeMarker = (f, idx) => encoder.encode('\n__MD5DISTURB__' + idx + '__' + Date.now() + '__' + Math.random().toString(36).slice(2) + '__' + f.name + '__');
+      const hashBuffer = buf => SparkMD5.ArrayBuffer.hash(buf);
+
+      let files = [];
+      let results = [];
+      let running = false;
+
+      controls.innerHTML = `
+        <div class="md5-drop" id="md5Drop">
+          <h4>拖拽文件或文件夹到此处</h4>
+          <p>支持批量图片 / 视频，可拖拽整个文件夹</p>
+          <div class="md5-or">— 或 —</div>
+          <div class="md5-file-btns">
+            <label class="btn"><input type="file" id="md5FileInput" multiple accept="image/*,video/*">选择文件</label>
+            <label class="btn secondary"><input type="file" id="md5FolderInput" webkitdirectory directory>选择文件夹</label>
+          </div>
+        </div>
+        <div class="md5-actions">
+          <button class="btn" id="md5Start" disabled>开始修改 MD5</button>
+          <button class="btn secondary" id="md5Download" disabled>打包下载</button>
+          <button class="btn secondary" id="md5Clear">清空列表</button>
+        </div>
+        <div class="md5-progress" id="md5Progress"><i id="md5ProgressBar"></i></div>
+        <div class="md5-list" id="md5List"></div>
+        <div class="note" style="margin-top:12px;">说明：通过在文件尾部追加唯一随机字节来改变 MD5，图片/视频仍可正常播放。若目标平台对文件完整性校验极严格，建议先小批量测试。</div>
+      `;
+
+      const drop = $('md5Drop'), fileInput = $('md5FileInput'), folderInput = $('md5FolderInput');
+      const startBtn = $('md5Start'), downloadBtn = $('md5Download'), clearBtn = $('md5Clear');
+      const list = $('md5List'), progressBar = $('md5ProgressBar');
+
+      async function collectEntries(entries) {
+        const out = [];
+        for (const entry of entries) {
+          if (entry.isFile) {
+            const file = await new Promise((resolve, reject) => entry.file(resolve, reject));
+            if (isMedia(file)) out.push(file);
+          } else if (entry.isDirectory) {
+            const reader = entry.createReader();
+            let batch;
+            do {
+              batch = await new Promise((resolve, reject) => reader.readEntries(resolve, reject));
+              out.push(...await collectEntries(batch));
+            } while (batch.length);
+          }
+        }
+        return out;
+      }
+
+      function addFiles(newFiles) {
+        const filtered = newFiles.filter(isMedia);
+        files = files.concat(filtered);
+        renderList();
+        startBtn.disabled = files.length === 0 || running;
+      }
+
+      function renderList() {
+        if (!files.length) { list.innerHTML = ''; return; }
+        const rows = files.map((f, i) => {
+          const r = results[i];
+          let statusHtml = '<span class="status">待处理</span>';
+          let newHash = '';
+          if (r) {
+            if (r.error) statusHtml = '<span class="status error">失败</span>';
+            else statusHtml = '<span class="status done">完成</span>';
+            newHash = r.error ? '' : `<div class="md5-hash">新: ${r.newHash}</div>`;
+          }
+          return `<tr><td>${escapeHtml(f.name)}<div class="md5-hash">${r && r.origHash ? '原: ' + r.origHash : ''}</div>${newHash}</td><td class="status">${statusHtml}</td></tr>`;
+        }).join('');
+        list.innerHTML = `<table><thead><tr><th>文件名 / MD5</th><th style="width:70px;">状态</th></tr></thead><tbody>${rows}</tbody></table>`;
+      }
+
+      async function processAll() {
+        if (running || !files.length) return;
+        running = true; startBtn.disabled = true; downloadBtn.disabled = true; results = [];
+        const concurrency = 4;
+        let done = 0;
+        renderList();
+        const updateProgress = () => {
+          const pct = files.length ? Math.round((done / files.length) * 100) : 0;
+          progressBar.style.width = pct + '%';
+        };
+        const processOne = async (f, idx) => {
+          try {
+            const origBuf = await f.arrayBuffer();
+            const origHash = hashBuffer(origBuf);
+            const marker = makeMarker(f, idx);
+            const combined = new Uint8Array(origBuf.byteLength + marker.length);
+            combined.set(new Uint8Array(origBuf));
+            combined.set(marker, origBuf.byteLength);
+            const newHash = hashBuffer(combined.buffer);
+            const ext = getExt(f.name);
+            const mime = f.type || (ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg' : ext === 'png' ? 'image/png' : ext === 'gif' ? 'image/gif' : ext === 'webp' ? 'image/webp' : ext === 'mp4' ? 'video/mp4' : 'application/octet-stream');
+            results[idx] = { blob: new Blob([combined], { type: mime }), name: f.name, origHash, newHash };
+          } catch (e) {
+            results[idx] = { error: true, message: e.message || '处理失败' };
+          }
+          done++;
+          updateProgress();
+          renderList();
+        };
+        const queue = files.map((f, i) => () => processOne(f, i));
+        const workers = [];
+        for (let i = 0; i < concurrency; i++) {
+          workers.push((async () => {
+            while (queue.length) {
+              const task = queue.shift();
+              await task();
+            }
+          })());
+        }
+        await Promise.all(workers);
+        running = false; startBtn.disabled = false;
+        const ok = results.filter(r => !r.error);
+        downloadBtn.disabled = ok.length === 0;
+        renderList();
+      }
+
+      async function downloadAll() {
+        const ok = results.filter(r => !r.error);
+        if (!ok.length) return;
+        if (ok.length === 1) {
+          saveAs(ok[0].blob, ok[0].name);
+          return;
+        }
+        const zip = new JSZip();
+        ok.forEach(r => zip.file(r.name, r.blob));
+        const content = await zip.generateAsync({ type: 'blob' });
+        saveAs(content, 'md5_modified_' + Date.now() + '.zip');
+      }
+
+      drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('dragover'); });
+      drop.addEventListener('dragleave', () => drop.classList.remove('dragover'));
+      drop.addEventListener('drop', async e => {
+        e.preventDefault(); drop.classList.remove('dragover');
+        const items = e.dataTransfer && e.dataTransfer.items ? Array.from(e.dataTransfer.items) : [];
+        if (items.length && items[0].webkitGetAsEntry) {
+          const entries = items.map(i => i.webkitGetAsEntry()).filter(Boolean);
+          const collected = await collectEntries(entries);
+          addFiles(collected);
+        } else {
+          addFiles(Array.from(e.dataTransfer.files));
+        }
+      });
+      drop.addEventListener('click', e => { if (e.target === drop || e.target.closest('#md5Drop') && !e.target.closest('.md5-file-btns')) fileInput.click(); });
+      fileInput.addEventListener('change', () => { addFiles(Array.from(fileInput.files)); fileInput.value = ''; });
+      folderInput.addEventListener('change', () => { addFiles(Array.from(folderInput.files)); folderInput.value = ''; });
+      startBtn.onclick = processAll;
+      downloadBtn.onclick = downloadAll;
+      clearBtn.onclick = () => { if (running) return; files = []; results = []; startBtn.disabled = true; downloadBtn.disabled = true; progressBar.style.width = '0%'; renderList(); };
+
+      renderList();
+    };
+
     toolSetups['wechat-generator'] = () => {
       $('modal').classList.add('wide');
       $('runBtn').style.display = 'none';
@@ -1428,6 +1629,45 @@
         while (n--) u8[n] = bstr.charCodeAt(n);
         return new Blob([u8], { type: mime });
       };
+
+      /* old-style Apple emoji via emoji-datasource-apple images */
+      const emojiBase = 'https://unpkg.com/emoji-datasource-apple@14.0.0/img/apple/64/';
+      const emojiList = [
+        { char: '😀', hex: '1f600' }, { char: '😂', hex: '1f602' }, { char: '🥰', hex: '1f970' },
+        { char: '😎', hex: '1f60e' }, { char: '😭', hex: '1f62d' }, { char: '😡', hex: '1f621' },
+        { char: '👍', hex: '1f44d' }, { char: '👎', hex: '1f44e' }, { char: '👏', hex: '1f44f' },
+        { char: '🙏', hex: '1f64f' }, { char: '🤝', hex: '1f91d' }, { char: '🎉', hex: '1f389' },
+        { char: '❤️', hex: '2764' }, { char: '🔥', hex: '1f525' }, { char: '🌹', hex: '1f339' },
+        { char: '💔', hex: '1f494' }, { char: '😴', hex: '1f634' }, { char: '🤔', hex: '1f914' },
+        { char: '😱', hex: '1f631' }, { char: '🤗', hex: '1f917' }, { char: '🥳', hex: '1f973' },
+        { char: '😇', hex: '1f607' }, { char: '🤡', hex: '1f921' }, { char: '💩', hex: '1f4a9' },
+        { char: '👻', hex: '1f47b' }, { char: '👋', hex: '1f44b' }, { char: '✌️', hex: '270c' },
+        { char: '🙌', hex: '1f64c' }, { char: '💪', hex: '1f4aa' }, { char: '🎁', hex: '1f381' },
+        { char: '🎈', hex: '1f388' }, { char: '🍎', hex: '1f34e' }, { char: '🍺', hex: '1f37a' },
+        { char: '🍰', hex: '1f370' }, { char: '🍜', hex: '1f35c' }, { char: '🌙', hex: '1f319' },
+        { char: '☀️', hex: '2600' }, { char: '⭐', hex: '2b50' }, { char: '☁️', hex: '2601' },
+        { char: '⚡', hex: '26a1' }, { char: '❄️', hex: '2744' }, { char: '💧', hex: '1f4a7' },
+        { char: '🌈', hex: '1f308' }, { char: '🔔', hex: '1f514' }, { char: '📞', hex: '1f4de' },
+        { char: '💣', hex: '1f4a3' }, { char: '🧨', hex: '1f9e8' }, { char: '💊', hex: '1f48a' },
+        { char: '💰', hex: '1f4b0' }, { char: '🧧', hex: '1f9e7' }, { char: '💯', hex: '1f4af' },
+        { char: '✅', hex: '2705' }, { char: '❌', hex: '274c' }, { char: '❓', hex: '2753' },
+        { char: '‼️', hex: '203c' }, { char: '🚫', hex: '1f6ab' }, { char: '🆗', hex: '1f197' },
+        { char: '🆒', hex: '1f192' }, { char: '🉑', hex: '1f251' }, { char: '🈲', hex: '1f232' },
+        { char: '㊗️', hex: '3297' }, { char: '㊙️', hex: '3299' }, { char: '🈶', hex: '1f236' },
+        { char: '🈚', hex: '1f21a' }, { char: '🈸', hex: '1f238' }, { char: '🈴', hex: '1f234' },
+        { char: '🈳', hex: '1f233' }, { char: '🈺', hex: '1f23a' }, { char: '🈵', hex: '1f235' }
+      ];
+      function emojiUrl(hex) { return emojiBase + hex + '.png'; }
+      function renderEmojiHtml(text) {
+        let html = escapeHtml(text);
+        // sort longer chars first to avoid partial matches on variation sequences
+        const sorted = [...emojiList].sort((a, b) => b.char.length - a.char.length);
+        for (const e of sorted) {
+          const re = new RegExp(escapeHtml(e.char).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g');
+          html = html.replace(re, `<img class="wx-emoji-img" src="${emojiUrl(e.hex)}" alt="${e.char}">`);
+        }
+        return html;
+      }
 
       controls.innerHTML = `<div class="wx-layout"><div class="wx-left" id="wxLeft"></div><div class="wx-right" id="wxRight"></div></div>`;
       const left = $('wxLeft'), right = $('wxRight');
@@ -1524,10 +1764,11 @@
       const emojiTitle = document.createElement('div'); emojiTitle.style.marginTop = '14px'; emojiTitle.style.fontSize = '0.8rem'; emojiTitle.style.color = 'var(--muted)'; emojiTitle.textContent = '点击 emoji 直接插入';
       addSec.appendChild(emojiTitle);
       const emojiGrid = document.createElement('div'); emojiGrid.className = 'wx-emoji-grid';
-      const emojis = ['😀','😂','🥰','😎','😭','😡','👍','👎','👏','🙏','🤝','🎉','❤️','🔥','🌹','💔','😴','🤔','😱','🤗','🥳','😇','🤡','💩','👻','👋','✌️','🙌','💪','🎁','🎈','🍎','🍺','🍰','🍜','🌙','☀️','⭐','☁️','⚡','❄️','💧','🌈','🔔','📞','💣','🧨','💊','💰','🧧','💯','✅','❌','❓','‼️','🚫','🆗','🆒','🉑','🈲','㊗️','㊙️','🈶','🈚','🈸','🈴','🈳','🈺','🈵'];
-      emojis.forEach(e => {
-        const b = document.createElement('button'); b.textContent = e; b.title = e;
-        b.onclick = () => { state.messages.push({ id: 'm' + nextId++, type: 'text', senderId: state.currentUserId, content: e }); renderMsgList(); renderPreview(); };
+      emojiList.forEach(e => {
+        const b = document.createElement('button'); b.title = e.char;
+        const img = document.createElement('img'); img.src = emojiUrl(e.hex); img.alt = e.char; img.loading = 'lazy';
+        b.appendChild(img);
+        b.onclick = () => { state.messages.push({ id: 'm' + nextId++, type: 'text', senderId: state.currentUserId, content: e.char }); renderMsgList(); renderPreview(); };
         emojiGrid.appendChild(b);
       });
       addSec.appendChild(emojiGrid);
@@ -1544,7 +1785,30 @@
       left.appendChild(msgSec);
 
       /* ---------- right preview ---------- */
-      right.innerHTML = `<div class="wx-phone-wrap"><div class="wx-phone" id="wxPhone"><div class="wx-screen" id="wxScreen"></div></div></div><div class="wx-export-btns"><button class="wx-mini-btn" id="wxExportImg">生成图片</button><button class="wx-mini-btn" id="wxExportVideo">生成视频</button><button class="wx-mini-btn" id="wxExportGif">生成 GIF</button></div>`;
+      state.export = { includeStatusBar: true, includeNavBar: true, includeInputBar: true, includeHomeIndicator: true, highRes: false };
+      right.innerHTML = `
+        <div class="wx-phone-wrap"><div class="wx-phone" id="wxPhone"><div class="wx-screen" id="wxScreen"></div></div></div>
+        <div class="wx-export-panel">
+          <h4>生成成片 / 导出开关</h4>
+          <div class="wx-export-toggles" id="wxExportToggles"></div>
+          <div class="wx-export-btns"><button class="wx-mini-btn" id="wxExportImg">生成图片</button><button class="wx-mini-btn" id="wxExportVideo">生成视频</button><button class="wx-mini-btn" id="wxExportGif">生成 GIF</button></div>
+        </div>`;
+      const togglesWrap = $('wxExportToggles');
+      [
+        { key: 'includeStatusBar', label: '状态栏' },
+        { key: 'includeNavBar', label: '导航栏' },
+        { key: 'includeInputBar', label: '输入栏' },
+        { key: 'includeHomeIndicator', label: 'Home 指示条' },
+        { key: 'highRes', label: '高清导出 (2x)' }
+      ].forEach(({ key, label }) => {
+        const f = document.createElement('label'); f.className = 'wx-toggle';
+        const inp = document.createElement('input'); inp.type = 'checkbox'; inp.checked = state.export[key];
+        const slider = document.createElement('span'); slider.className = 'slider';
+        const txt = document.createElement('span'); txt.textContent = label;
+        f.appendChild(inp); f.appendChild(slider); f.appendChild(txt);
+        inp.onchange = () => { state.export[key] = inp.checked; renderPreview(); };
+        togglesWrap.appendChild(f);
+      });
       $('wxExportImg').onclick = exportImage;
       $('wxExportVideo').onclick = exportVideo;
       $('wxExportGif').onclick = exportGif;
@@ -1731,7 +1995,7 @@
         const voiceWave = `<span class="wx-voice-wave"><i></i><i></i><i></i></span>`;
         let content = '';
         switch (msg.type) {
-          case 'text': content = `<div class="wx-bubble">${escapeHtml(msg.content)}</div>`; break;
+          case 'text': content = `<div class="wx-bubble">${renderEmojiHtml(msg.content)}</div>`; break;
           case 'image': content = `<div class="wx-bubble wx-img-msg">${msg.image ? `<img src="${msg.image}">` : ''}</div>`; break;
           case 'voice': content = `<div class="wx-bubble wx-voice">${isMe ? `<span>${msg.seconds}"</span>${voiceWave}` : `${voiceWave}<span>${msg.seconds}"</span>${!msg.isRead ? '<span class="wx-voice-unread"></span>' : ''}`}</div>`; break;
           case 'redpacket': content = `<div class="wx-bubble wx-trans"><div class="wx-trans-content redp"><div class="wx-trans-icon">🧧</div><div><span>${escapeHtml(msg.remark || '恭喜发财，大吉大利')}</span><font>微信红包</font></div></div><div class="wx-trans-bottom"><span>微信红包</span></div></div>`; break;
@@ -1747,22 +2011,23 @@
       }
       function _renderPreview() {
         const screen = $('wxScreen'); if (!screen) return;
-        const s = state.status;
+        const s = state.status, ex = state.export;
         screen.className = 'wx-screen ' + (s.theme === 'dark' ? 'dark' : 'light');
         const sigHtml = `<div class="wx-signal">${[1, 2, 3, 4].map(i => `<i class="${i <= s.signal ? 'on' : ''}"></i>`).join('')}</div>`;
         const netHtml = s.network === 'wifi' ? `<div class="wx-wifi">${[1, 2, 3].map(i => `<i class="${i <= s.wifi ? 'on' : ''}"></i>`).join('')}</div>` : `<span class="wx-net">${s.network.toUpperCase()}</span>`;
         const batteryHtml = `<div class="wx-battery ${s.charging ? 'charging' : ''}"><div class="wx-battery-body"><div class="wx-battery-fill" style="width:${s.battery}%"></div>${s.charging ? '<span class="bolt">⚡</span>' : ''}</div><span>${s.battery}%</span></div>`;
-        const statusHtml = `<div class="wx-statusbar"><div class="wx-status-left"><span>${escapeHtml(s.time)}</span>${sigHtml}${netHtml}</div><div class="wx-status-right">${batteryHtml}</div></div>`;
+        const statusHtml = ex.includeStatusBar ? `<div class="wx-statusbar"><div class="wx-status-left"><span>${escapeHtml(s.time)}</span>${sigHtml}${netHtml}</div><div class="wx-status-right">${batteryHtml}</div></div>` : '';
         const earpieceIcon = `<span class="wx-earpiece" title="听筒模式"><svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg></span>`;
-        const navHtml = `<div class="wx-navbar"><div class="wx-nav-left"><div class="wx-back"></div>${s.unread > 0 ? `<span class="wx-unread">${s.unread}</span>` : ''}</div><div class="wx-nav-center"><div class="wx-nav-title">${escapeHtml(s.title)}${s.earpiece ? earpieceIcon : ''}</div></div><div class="wx-nav-right"><div class="wx-dots"><i></i><i></i><i></i></div></div></div>`;
+        const navHtml = ex.includeNavBar ? `<div class="wx-navbar"><div class="wx-nav-left"><div class="wx-back"></div>${s.unread > 0 ? `<span class="wx-unread">${s.unread}</span>` : ''}</div><div class="wx-nav-center"><div class="wx-nav-title">${escapeHtml(s.title)}${s.earpiece ? earpieceIcon : ''}</div></div><div class="wx-nav-right"><div class="wx-dots"><i></i><i></i><i></i></div></div></div>` : '';
         const bgStyle = s.bg ? `background-image:url(${s.bg});background-size:cover;background-position:center;` : '';
         const msgsHtml = state.messages.map(renderMessage).join('');
         const chatHtml = `<div class="wx-chat" style="${bgStyle}">${msgsHtml}</div>`;
         const voiceIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>`;
         const emojiIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>`;
         const plusIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>`;
-        const inputBar = `<div class="wx-inputbar"><div class="wx-input-btn voice">${voiceIcon}</div><div class="wx-input ${s.voice ? 'say' : ''}">${s.voice ? '按住 说话' : ''}</div><div class="wx-input-btn emoji">${emojiIcon}</div><div class="wx-input-btn more">${plusIcon}</div></div><div class="wx-homebar"><i></i></div>`;
-        screen.innerHTML = statusHtml + navHtml + chatHtml + inputBar;
+        const inputBar = ex.includeInputBar ? `<div class="wx-inputbar"><div class="wx-input-btn voice">${voiceIcon}</div><div class="wx-input ${s.voice ? 'say' : ''}">${s.voice ? '按住 说话' : ''}</div><div class="wx-input-btn emoji">${emojiIcon}</div><div class="wx-input-btn more">${plusIcon}</div></div>` : '';
+        const homeBar = ex.includeHomeIndicator ? `<div class="wx-homebar"><i></i></div>` : '';
+        screen.innerHTML = statusHtml + navHtml + chatHtml + inputBar + homeBar;
         screen.querySelectorAll('.wx-avatar').forEach((av, idx) => {
           const msg = state.messages.filter(m => m.type !== 'time' && !m.type.endsWith('-call'))[idx];
           if (!msg) return;
@@ -1783,32 +2048,39 @@
         }
       }
 
+      function getExportConfig() {
+        const high = state.export.highRes;
+        return { scale: high ? 2 : 1, width: 1080, height: 1920, suffix: high ? '2160x3840' : '1080x1920' };
+      }
       function exportImage() {
         if (typeof html2canvas === 'undefined') return alert('html2canvas 未加载');
-        html2canvas($('wxScreen'), { scale: 1, width: 1080, height: 1920, backgroundColor: null, useCORS: true, logging: false }).then(canvas => {
-          canvas.toBlob(blob => saveAs(blob, 'wechat_screen_1080x1920.png'));
+        const cfg = getExportConfig();
+        html2canvas($('wxScreen'), { scale: cfg.scale, width: cfg.width, height: cfg.height, backgroundColor: null, useCORS: true, logging: false }).then(canvas => {
+          canvas.toBlob(blob => saveAs(blob, 'wechat_screen_' + cfg.suffix + '.png'));
         });
       }
       function exportVideo() {
         if (typeof html2canvas === 'undefined') return alert('html2canvas 未加载');
-        html2canvas($('wxScreen'), { scale: 1, width: 1080, height: 1920, backgroundColor: null, useCORS: true, logging: false }).then(canvas => {
+        const cfg = getExportConfig();
+        html2canvas($('wxScreen'), { scale: cfg.scale, width: cfg.width, height: cfg.height, backgroundColor: null, useCORS: true, logging: false }).then(canvas => {
           const stream = canvas.captureStream(30);
           const mime = MediaRecorder.isTypeSupported('video/webm;codecs=vp9') ? 'video/webm;codecs=vp9' : 'video/webm;codecs=vp8';
           const rec = new MediaRecorder(stream, { mimeType: mime });
           const chunks = [];
           rec.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
-          rec.onstop = () => { saveAs(new Blob(chunks, { type: 'video/webm' }), 'wechat_screen_1080x1920.webm'); };
+          rec.onstop = () => { saveAs(new Blob(chunks, { type: 'video/webm' }), 'wechat_screen_' + cfg.suffix + '.webm'); };
           rec.start();
           setTimeout(() => rec.stop(), 3000);
         });
       }
       function exportGif() {
         if (typeof html2canvas === 'undefined' || typeof gifshot === 'undefined') return alert('导出库未加载');
-        html2canvas($('wxScreen'), { scale: 1, width: 1080, height: 1920, backgroundColor: null, useCORS: true, logging: false }).then(canvas => {
+        const cfg = getExportConfig();
+        html2canvas($('wxScreen'), { scale: cfg.scale, width: cfg.width, height: cfg.height, backgroundColor: null, useCORS: true, logging: false }).then(canvas => {
           const dataUrl = canvas.toDataURL('image/png');
           gifshot.createGIF({ images: [dataUrl], gifWidth: canvas.width, gifHeight: canvas.height, interval: 0.5 }, obj => {
             if (obj.error) return alert('GIF 生成失败：' + (obj.errorCode || obj.errorMsg));
-            saveAs(dataURLtoBlob(obj.image), 'wechat_screen_1080x1920.gif');
+            saveAs(dataURLtoBlob(obj.image), 'wechat_screen_' + cfg.suffix + '.gif');
           });
         });
       }
