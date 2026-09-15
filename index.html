@@ -321,7 +321,7 @@
     .md5-progress i { display: block; height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent2), var(--accent3)); transition: width 0.2s; }
     .md5-actions { display: flex; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
 
-    .wx-msglist { max-height: 220px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+    .wx-msglist { max-height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
     .wx-msgitem { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07); border-radius: 12px; padding: 10px; }
     .wx-msgitem-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 0.8rem; color: var(--muted); }
     .wx-type-badge { padding: 2px 8px; border-radius: 999px; background: rgba(0,240,255,0.12); color: var(--accent1); font-size: 0.7rem; }
@@ -363,15 +363,14 @@
     .wx-signal i:nth-child(2) { height: 14px; }
     .wx-signal i:nth-child(3) { height: 19px; }
     .wx-signal i:nth-child(4) { height: 25px; }
-    .wx-wifi { display: flex; flex-direction: column; align-items: center; gap: 3px; }
-    .wx-wifi i { width: 39px; height: 16px; border-radius: 20px 20px 0 0; border-top: 4px solid #000; border-left: 4px solid #000; border-right: 4px solid #000; opacity: 0.22; box-sizing: border-box; }
-    .wx-screen.dark .wx-wifi i { border-color: #fff; }
-    .wx-wifi i.on { opacity: 1; }
-    .wx-wifi i:nth-child(2) { width: 25px; height: 11px; }
-    .wx-wifi i:nth-child(3) { width: 12px; height: 8px; border-radius: 4px 4px 0 0; border-width: 3px; }
+    .wx-wifi { display: flex; align-items: center; }
+    .wx-wifi svg { width: 44px; height: 34px; }
+    .wx-wifi svg path, .wx-wifi svg circle { opacity: 1; }
+    .wx-wifi svg .off { opacity: 0.22; }
+    .wx-screen.dark .wx-wifi svg { color: #fff; }
     .wx-net { font-size: 32px; font-weight: 500; }
     .wx-battery { display: flex; align-items: center; gap: 8px; position: relative; }
-    .wx-battery-body { width: 70px; height: 32px; border: 3px solid #000; border-radius: 5px; padding: 3px 14px 3px 3px; position: relative; }
+    .wx-battery-body { width: 70px; height: 32px; border: 3px solid #000; border-radius: 5px; padding: 3px; position: relative; }
     .wx-screen.dark .wx-battery-body { border-color: #fff; }
     .wx-battery-body::after { content: ''; position: absolute; right: -7px; top: 7px; width: 5px; height: 14px; background: #000; border-radius: 0 3px 3px 0; }
     .wx-screen.dark .wx-battery-body::after { background: #fff; }
@@ -388,15 +387,17 @@
     .wx-nav-title { font-size: 46px; font-weight: 500; color: #000; display: flex; align-items: center; max-width: 540px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .wx-screen.dark .wx-nav-title { color: #fff; }
     .wx-nav-right { width: 180px; display: flex; justify-content: flex-end; }
-    .wx-back { width: 24px; height: 46px; border-left: 7px solid #000; border-bottom: 7px solid #000; transform: rotate(45deg); margin-right: 5px; }
-    .wx-screen.dark .wx-back { border-color: #fff; }
+    .wx-back { width: 24px; height: 46px; color: #000; display: flex; align-items: center; }
+    .wx-back svg { width: 100%; height: 100%; }
+    .wx-screen.dark .wx-back { color: #fff; }
     .wx-unread { background: #d5d5d5; color: #000; font-size: 32px; min-width: 64px; height: 64px; border-radius: 32px; display: flex; align-items: center; justify-content: center; padding: 0 20px; margin-left: 20px; }
     .wx-screen.dark .wx-unread { background: #555; color: #fff; }
     .wx-earpiece { width: 28px; height: 38px; margin-left: 12px; display: flex; align-items: center; justify-content: center; }
     .wx-earpiece svg { width: 100%; height: 100%; fill: currentColor; }
-    .wx-dots { display: flex; gap: 10px; align-items: center; }
-    .wx-dots i { width: 10px; height: 10px; background: #000; border-radius: 50%; }
-    .wx-screen.dark .wx-dots i { background: #fff; }
+    .wx-more-btn { width: 68px; height: 68px; border: 4px solid #000; border-radius: 50%; display: flex; align-items: center; justify-content: center; gap: 7px; }
+    .wx-screen.dark .wx-more-btn { border-color: #fff; }
+    .wx-more-btn i { width: 8px; height: 8px; background: #000; border-radius: 50%; }
+    .wx-screen.dark .wx-more-btn i { background: #fff; }
 
     /* chat body */
     .wx-chat { background: #ededed; padding: 30px; display: flex; flex-direction: column; flex: 1; overflow-y: auto; position: relative; }
@@ -415,13 +416,11 @@
     .wx-msg-row.left .wx-bubble-wrap { margin-left: 140px; margin-right: 120px; }
     .wx-msg-row.right .wx-bubble-wrap { margin-left: 120px; margin-right: 140px; }
     .wx-bubble { padding: 24px 34px; border-radius: 12px; background: #fff; color: #000; font-size: 42px; line-height: normal; word-break: break-all; position: relative; display: inline-block; min-height: 108px; }
-    .wx-msg-row.right .wx-bubble { background: #98e970; }
+    .wx-msg-row.right .wx-bubble { background: #95ec69; }
     .wx-screen.dark .wx-bubble { background: #2c2c2c; color: #fff; }
-    .wx-screen.dark .wx-msg-row.right .wx-bubble { background: #1f6b1f; }
     .wx-bubble::after { content: ''; background: #fff; width: 22px; height: 22px; border-bottom-left-radius: 4px; top: 44px; left: -11px; position: absolute; transform: rotate(45deg); }
-    .wx-msg-row.right .wx-bubble::after { background: #98e970; left: auto; right: -9px; border-top-right-radius: 4px; border-bottom-left-radius: 0; }
+    .wx-msg-row.right .wx-bubble::after { background: #95ec69; left: auto; right: -9px; border-top-right-radius: 4px; border-bottom-left-radius: 0; }
     .wx-screen.dark .wx-msg-row.left .wx-bubble::after { background: #2c2c2c; }
-    .wx-screen.dark .wx-msg-row.right .wx-bubble::after { background: #1f6b1f; }
 
     /* image message */
     .wx-img-msg { padding: 0; background: transparent; border: 1px solid #d5d5d5; overflow: hidden; max-width: 600px; }
@@ -446,24 +445,47 @@
     .wx-msg-del { position: absolute; top: -14px; right: -14px; width: 40px; height: 40px; border-radius: 50%; border: none; background: #ff3b30; color: #fff; font-size: 26px; line-height: 1; cursor: pointer; opacity: 0; transition: 0.15s; z-index: 5; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.3); padding: 0; }
     .wx-msg-row:hover .wx-msg-del { opacity: 1; }
 
-    /* transfer / redpacket card */
-    .wx-trans { width: 640px; padding: 0; background: #f79c46; color: #fff; }
-    .wx-msg-row.right .wx-trans { background: #f79c46; }
-    .wx-trans.get { background: #f8e2c6; }
-    .wx-msg-row.right .wx-trans.get { background: #f8e2c6; }
-    .wx-trans::after { background: #f79c46; }
-    .wx-trans.get::after { background: #f8e2c6; }
-    .wx-trans-content { display: flex; height: 170px; align-items: center; position: relative; }
-    .wx-trans-content::after { content: ''; background: #f0b36f; position: absolute; width: 100%; height: 1px; bottom: 0; }
-    .wx-trans.get .wx-trans-content::after { background: #f9e7d1; }
-    .wx-trans-icon { width: 108px; height: 108px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.2); border-radius: 10px; font-size: 64px; }
-    .wx-trans-content.redp .wx-trans-icon { width: 90px; }
-    .wx-trans-content > div { flex: 1; display: flex; flex-direction: column; margin-left: 26px; overflow: hidden; }
-    .wx-trans-content > div span { font-size: 42px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .wx-trans-content > div font { font-size: 32px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 5px; }
-    .wx-trans-bottom { height: 60px; display: flex; align-items: center; padding: 0 32px; }
-    .wx-trans-bottom span { font-size: 32px; color: #faecda; }
-    .wx-trans.get .wx-trans-bottom span { color: #fff; }
+    /* red packet message — 1:1 WeChat */
+    .wx-rp { width: 620px; padding: 0; background: #fa9d3b; color: #fff; overflow: hidden; border-radius: 14px; }
+    .wx-rp::after { background: #fa9d3b; top: 58px; }
+    .wx-rp-inner { display: flex; align-items: center; gap: 32px; padding: 46px 40px; box-sizing: border-box; }
+    .wx-rp-coin { width: 118px; height: 118px; border-radius: 50%; flex-shrink: 0; background: radial-gradient(circle at 36% 30%, #ffedba, #f8c453 52%, #e89b24); display: flex; align-items: center; justify-content: center; font-size: 66px; font-weight: 700; color: #cf7012; box-shadow: inset 0 0 0 7px rgba(255, 238, 178, 0.5), inset 0 -10px 18px rgba(160, 80, 0, 0.35); }
+    .wx-rp-texts { display: flex; flex-direction: column; gap: 14px; overflow: hidden; }
+    .wx-rp-remark { font-size: 42px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .wx-rp-label { font-size: 32px; color: rgba(255, 255, 255, 0.72); }
+    .wx-rp.opened { background: #f7e3bd; }
+    .wx-rp.opened::after { background: #f7e3bd; }
+    .wx-rp.opened .wx-rp-coin { filter: saturate(0.3) brightness(1.14); }
+    .wx-rp.opened .wx-rp-remark { color: #a68c62; }
+    .wx-rp.opened .wx-rp-label { color: #b29c79; }
+
+    /* transfer message — 1:1 WeChat */
+    .wx-tr { width: 620px; padding: 40px 42px 32px; }
+    .wx-tr::after { top: 52px; }
+    .wx-tr-top { display: flex; align-items: baseline; }
+    .wx-tr-amt { font-size: 48px; font-weight: 600; }
+    .wx-tr-to { font-size: 36px; margin-left: 20px; }
+    .wx-tr-line { height: 2px; background: rgba(0, 0, 0, 0.08); margin: 32px 0 26px; }
+    .wx-tr-status { font-size: 32px; color: #999; }
+    .wx-msg-row.right .wx-tr-line { background: rgba(255, 255, 255, 0.45); }
+    .wx-msg-row.right .wx-tr-status { color: rgba(255, 255, 255, 0.88); }
+    .wx-screen.dark .wx-msg-row.left .wx-tr-status { color: #777; }
+
+    /* recall notice */
+    .wx-recall-notice { text-align: center; color: #909090; font-size: 30px; margin-bottom: 40px; }
+    .wx-screen.dark .wx-recall-notice { color: #777; }
+    .wx-msg-rec { position: absolute; top: 32px; right: -14px; width: 40px; height: 40px; border-radius: 50%; border: none; background: #f5a623; color: #fff; font-size: 22px; line-height: 1; cursor: pointer; opacity: 0; transition: 0.15s; z-index: 5; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); padding: 0; }
+    .wx-msg-row:hover .wx-msg-rec { opacity: 1; }
+
+    /* long-capture clone */
+    .wx-long { height: auto !important; overflow: visible !important; }
+    .wx-long .wx-chat { overflow: visible; flex: none; }
+
+    /* collapsible sections */
+    .wx-section.collapsible h4 { cursor: pointer; user-select: none; display: flex; justify-content: space-between; align-items: center; }
+    .wx-section.collapsible h4::after { content: '▾'; font-size: 0.8rem; color: var(--muted); transition: 0.2s; }
+    .wx-section.collapsible.collapsed h4::after { transform: rotate(-90deg); }
+    .wx-section.collapsed .wx-sec-body { display: none; }
 
     /* input bar + home indicator */
     .wx-inputbar { height: 150px; background: #f7f7f7; border-top: 1px solid #e5e5e5; display: flex; align-items: center; flex-shrink: 0; }
@@ -1689,6 +1711,16 @@
 
       controls.innerHTML = `<div class="wx-layout"><div class="wx-left" id="wxLeft"></div><div class="wx-right" id="wxRight"></div></div>`;
       const left = $('wxLeft'), right = $('wxRight');
+      function makeCollapsible(sec, open) {
+        sec.classList.add('collapsible');
+        if (!open) sec.classList.add('collapsed');
+        const h4 = sec.querySelector('h4');
+        const body = document.createElement('div'); body.className = 'wx-sec-body';
+        while (h4.nextSibling) body.appendChild(h4.nextSibling);
+        sec.appendChild(body);
+        h4.onclick = () => sec.classList.toggle('collapsed');
+      }
+      let lastTextInput = null;
 
       /* ---------- status ---------- */
       const statusSec = document.createElement('div'); statusSec.className = 'wx-section'; statusSec.innerHTML = '<h4>外观 / 状态栏</h4>';
@@ -1743,6 +1775,7 @@
       titleIn.oninput = () => { state.status.title = titleIn.value; renderPreview(); };
       bgIn.onchange = async () => { const f = bgIn.files[0]; state.status.bg = f ? await readFile(f) : null; renderPreview(); };
       left.appendChild(statusSec);
+      makeCollapsible(statusSec, true);
 
       /* ---------- users ---------- */
       const userSec = document.createElement('div'); userSec.className = 'wx-section'; userSec.innerHTML = '<h4>用户管理</h4>';
@@ -1752,6 +1785,7 @@
       addUserBtn.onclick = () => { state.users.push({ id: 'u' + nextId++, name: '用户' + state.users.length, avatar: null, frameColor: '#bc13fe' }); renderUsers(); renderPreview(); };
       userSec.appendChild(addUserBtn);
       left.appendChild(userSec);
+      makeCollapsible(userSec, false);
 
       function renderUsers() {
         userList.innerHTML = '';
@@ -1782,14 +1816,27 @@
         const b = document.createElement('button'); b.className = 'wx-mini-btn'; b.textContent = '+' + label; b.onclick = () => addMessage(type); addBtns.appendChild(b);
       });
       addSec.appendChild(addBtns);
-      const emojiTitle = document.createElement('div'); emojiTitle.style.marginTop = '14px'; emojiTitle.style.fontSize = '0.8rem'; emojiTitle.style.color = 'var(--muted)'; emojiTitle.textContent = '点击 emoji 直接插入';
+      const emojiTitle = document.createElement('div'); emojiTitle.style.marginTop = '14px'; emojiTitle.style.fontSize = '0.8rem'; emojiTitle.style.color = 'var(--muted)'; emojiTitle.textContent = '点击 emoji 插入到正在编辑的文字中（未编辑时新添一条消息）';
       addSec.appendChild(emojiTitle);
       const emojiGrid = document.createElement('div'); emojiGrid.className = 'wx-emoji-grid';
       emojiList.forEach(e => {
         const b = document.createElement('button'); b.title = e.char;
         const img = document.createElement('img'); img.src = emojiUrl(e.hex); img.alt = e.char; img.loading = 'lazy';
         b.appendChild(img);
-        b.onclick = () => { state.messages.push({ id: 'm' + nextId++, type: 'text', senderId: state.currentUserId, content: e.char }); renderMsgList(); renderPreview(); };
+        b.onclick = () => {
+          const ta = lastTextInput;
+          if (ta && document.contains(ta)) {
+            const s0 = ta.selectionStart != null ? ta.selectionStart : ta.value.length;
+            const e0 = ta.selectionEnd != null ? ta.selectionEnd : s0;
+            ta.value = ta.value.slice(0, s0) + e.char + ta.value.slice(e0);
+            ta.focus();
+            ta.selectionStart = ta.selectionEnd = s0 + e.char.length;
+            if (ta.oninput) ta.oninput();
+          } else {
+            state.messages.push({ id: 'm' + nextId++, type: 'text', senderId: state.currentUserId, content: e.char });
+            renderMsgList(); renderPreview();
+          }
+        };
         emojiGrid.appendChild(b);
       });
       addSec.appendChild(emojiGrid);
@@ -1808,6 +1855,7 @@
       autoRow.appendChild(autoToggle); autoRow.appendChild(everySel.parentNode); autoRow.appendChild(stepSel.parentNode); autoRow.appendChild(startIn.parentNode);
       addSec.appendChild(autoRow);
       left.appendChild(addSec);
+      makeCollapsible(addSec, true);
 
       /* ---------- message list ---------- */
       const msgSec = document.createElement('div'); msgSec.className = 'wx-section'; msgSec.innerHTML = '<h4>消息列表</h4>';
@@ -1818,6 +1866,7 @@
       const msgList = document.createElement('div'); msgList.className = 'wx-msglist'; msgList.id = 'wxMsgList';
       msgSec.appendChild(msgList);
       left.appendChild(msgSec);
+      makeCollapsible(msgSec, true);
 
       /* ---------- right preview ---------- */
       state.export = { includeStatusBar: true, includeNavBar: true, includeInputBar: true, includeHomeIndicator: true, highRes: false };
@@ -1836,7 +1885,7 @@
         <div class="wx-export-panel">
           <h4>生成成片 / 导出开关</h4>
           <div class="wx-export-toggles" id="wxExportToggles"></div>
-          <div class="wx-export-btns"><button class="wx-mini-btn" id="wxExportImg">生成图片</button><button class="wx-mini-btn" id="wxExportVideo">生成视频</button><button class="wx-mini-btn" id="wxExportGif">生成 GIF</button></div>
+          <div class="wx-export-btns"><button class="wx-mini-btn" id="wxExportImg">生成图片</button><button class="wx-mini-btn" id="wxExportLong">截长屏</button><button class="wx-mini-btn" id="wxExportVideo">生成视频</button><button class="wx-mini-btn" id="wxExportGif">生成 GIF</button></div>
         </div>`;
       const togglesWrap = $('wxExportToggles');
       [
@@ -1855,6 +1904,7 @@
         togglesWrap.appendChild(f);
       });
       $('wxExportImg').onclick = exportImage;
+      $('wxExportLong').onclick = exportLongImage;
       $('wxExportVideo').onclick = exportVideo;
       $('wxExportGif').onclick = exportGif;
 
@@ -1913,8 +1963,8 @@
           case 'time': msg.time = '12:00'; break;
           case 'image': msg.image = null; break;
           case 'voice': msg.seconds = 5; msg.isRead = false; msg.text = ''; break;
-          case 'redpacket': msg.amount = '8.88'; msg.remark = '恭喜发财，大吉大利'; break;
-          case 'transfer': msg.amount = '100.00'; msg.remark = '转账'; break;
+          case 'redpacket': msg.amount = '8.88'; msg.remark = '恭喜发财，大吉大利'; msg.opened = false; break;
+          case 'transfer': msg.amount = '100.00'; msg.status = 'pending'; break;
           case 'voice-call':
           case 'video-call':
             msg.contactId = state.users.find(u => u.id !== 'u0')?.id || 'u0';
@@ -1933,8 +1983,12 @@
           const item = document.createElement('div'); item.className = 'wx-msgitem';
           const header = document.createElement('div'); header.className = 'wx-msgitem-header';
           const badge = document.createElement('span'); badge.className = 'wx-type-badge'; badge.textContent = typeName(msg.type);
+          const rec = document.createElement('button'); rec.className = 'wx-del'; rec.style.cssText = 'width:auto;padding:0 8px;font-size:0.72rem;'; rec.textContent = msg.recalled ? '恢复' : '撤回';
+          rec.onclick = () => { msg.recalled = !msg.recalled; renderMsgList(); renderPreview(); };
           const del = document.createElement('button'); del.className = 'wx-del'; del.textContent = '×'; del.onclick = () => { state.messages = state.messages.filter(m => m.id !== msg.id); renderMsgList(); renderPreview(); };
-          header.appendChild(badge); header.appendChild(del);
+          header.appendChild(badge);
+          if (msg.type !== 'time' && !msg.type.endsWith('-call')) header.appendChild(rec);
+          header.appendChild(del);
           const body = document.createElement('div'); body.className = 'wx-row'; body.style.alignItems = 'flex-start';
           if (msg.type !== 'time' && !msg.type.endsWith('-call')) {
             const senderWrap = document.createElement('label'); senderWrap.className = 'wx-field'; senderWrap.style.flex = '0 0 100px';
@@ -1954,6 +2008,7 @@
         const wrap = document.createElement('div'); wrap.className = 'wx-field'; wrap.style.flex = '1';
         if (msg.type === 'text') {
           const ta = document.createElement('textarea'); ta.placeholder = '输入文字（Ctrl+Enter 快速新增一条）'; ta.rows = 2; ta.value = msg.content;
+          ta.onfocus = () => { lastTextInput = ta; };
           ta.oninput = () => { msg.content = ta.value; renderPreview(); };
           ta.onkeydown = e => {
             if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
@@ -2009,13 +2064,24 @@
             presets.appendChild(b);
           });
           wrap.appendChild(presets);
+          const openBtn = document.createElement('button');
+          openBtn.className = 'wx-mini-btn'; openBtn.style.marginTop = '6px';
+          const syncOpen = () => { openBtn.textContent = msg.opened ? '✓ 已领取（点击恢复未领取）' : '标记为已领取'; openBtn.style.opacity = msg.opened ? '1' : ''; };
+          openBtn.onclick = () => { msg.opened = !msg.opened; syncOpen(); renderPreview(); };
+          syncOpen();
+          wrap.appendChild(openBtn);
         } else if (msg.type === 'transfer') {
           const row = document.createElement('div'); row.className = 'wx-row';
           const amountIn = document.createElement('input'); amountIn.type = 'number'; amountIn.step = '0.01'; amountIn.value = msg.amount; amountIn.style.width = '90px';
           amountIn.oninput = () => { msg.amount = amountIn.value; renderPreview(); };
-          const remarkIn = document.createElement('input'); remarkIn.type = 'text'; remarkIn.placeholder = '备注'; remarkIn.value = msg.remark;
-          remarkIn.oninput = () => { msg.remark = remarkIn.value; renderPreview(); };
-          row.appendChild(amountIn); row.appendChild(remarkIn);
+          const statusWrap = document.createElement('label'); statusWrap.className = 'wx-field'; statusWrap.style.flex = '0 0 130px';
+          const sspan = document.createElement('span'); sspan.textContent = '收款状态';
+          const ssel = document.createElement('select');
+          [['pending', '待收款'], ['accepted', '已收钱'], ['refunded', '已退还']].forEach(([v, t]) => { const o = document.createElement('option'); o.value = v; o.textContent = t; ssel.appendChild(o); });
+          ssel.value = msg.status || 'pending';
+          ssel.onchange = () => { msg.status = ssel.value; renderPreview(); };
+          statusWrap.appendChild(sspan); statusWrap.appendChild(ssel);
+          row.appendChild(amountIn); row.appendChild(statusWrap);
           wrap.appendChild(row);
           const presets = document.createElement('div'); presets.className = 'wx-amount-presets';
           ['1', '10', '50', '100', '500', '1000', '5200'].forEach(v => {
@@ -2095,6 +2161,10 @@
         const avatar = user.avatar ? `<img src="${user.avatar}" alt="">` : `<span>${escapeHtml(user.name.slice(0, 1))}</span>`;
         const voiceWave = `<span class="wx-voice-wave"><i></i><i></i><i></i></span>`;
         const nick = (state.status.groupChat && !isMe) ? `<div class="wx-nick">${escapeHtml(user.name)}</div>` : '';
+        if (msg.recalled) {
+          const name = isMe ? '你' : escapeHtml(user.name);
+          return `<div class="wx-recall-notice">${name}撤回了一条消息</div>`;
+        }
         let content = '';
         switch (msg.type) {
           case 'text': content = `<div class="wx-bubble">${renderEmojiHtml(msg.content)}</div>`; break;
@@ -2105,10 +2175,18 @@
             content = `<div class="wx-bubble wx-voice" style="width:${vw}px">${inner}</div>` + (msg.text ? `<div class="wx-voice-text">${renderEmojiHtml(msg.text)}</div>` : '');
             break;
           }
-          case 'redpacket': content = `<div class="wx-bubble wx-trans"><div class="wx-trans-content redp"><div class="wx-trans-icon">🧧</div><div><span>${escapeHtml(msg.remark || '恭喜发财，大吉大利')}</span><font>微信红包</font></div></div><div class="wx-trans-bottom"><span>微信红包</span></div></div>`; break;
-          case 'transfer': content = `<div class="wx-bubble wx-trans"><div class="wx-trans-content"><div class="wx-trans-icon">💰</div><div><span>¥${escapeHtml(msg.amount)}</span><font>${escapeHtml(msg.remark || '转账')}</font></div></div><div class="wx-trans-bottom"><span>微信转账</span></div></div>`; break;
+          case 'redpacket': {
+            const opened = !!msg.opened;
+            content = `<div class="wx-bubble wx-rp${opened ? ' opened' : ''}"><div class="wx-rp-inner"><div class="wx-rp-coin">¥</div><div class="wx-rp-texts"><span class="wx-rp-remark">${escapeHtml(msg.remark || '恭喜发财，大吉大利')}</span><span class="wx-rp-label">微信红包${opened ? ' 已领取' : ''}</span></div></div></div>`;
+            break;
+          }
+          case 'transfer': {
+            const stTxt = { pending: '待收款', accepted: '已收钱', refunded: '已退还' }[msg.status] || '待收款';
+            content = `<div class="wx-bubble wx-tr"><div class="wx-tr-top"><span class="wx-tr-amt">¥${escapeHtml(msg.amount)}</span><span class="wx-tr-to">转账给你</span></div><div class="wx-tr-line"></div><div class="wx-tr-status">${stTxt}</div></div>`;
+            break;
+          }
         }
-        return `<div class="wx-msg-row ${isMe ? 'right' : 'left'}" data-mid="${msg.id}"><div class="wx-avatar" style="border-color:${user.frameColor}">${avatar}</div><div class="wx-bubble-wrap">${nick}${content}<button class="wx-msg-del" title="删除该消息">×</button></div></div>`;
+        return `<div class="wx-msg-row ${isMe ? 'right' : 'left'}" data-mid="${msg.id}"><div class="wx-avatar" style="border-color:${user.frameColor}">${avatar}</div><div class="wx-bubble-wrap">${nick}${content}<button class="wx-msg-rec" title="撤回该消息">撤</button><button class="wx-msg-del" title="删除该消息">×</button></div></div>`;
       }
 
       let previewTimer;
@@ -2121,11 +2199,11 @@
         const s = state.status, ex = state.export;
         screen.className = 'wx-screen ' + (s.theme === 'dark' ? 'dark' : 'light');
         const sigHtml = `<div class="wx-signal">${[1, 2, 3, 4].map(i => `<i class="${i <= s.signal ? 'on' : ''}"></i>`).join('')}</div>`;
-        const netHtml = s.network === 'wifi' ? `<div class="wx-wifi">${[1, 2, 3].map(i => `<i class="${i <= s.wifi ? 'on' : ''}"></i>`).join('')}</div>` : `<span class="wx-net">${s.network.toUpperCase()}</span>`;
-        const batteryHtml = `<div class="wx-battery ${s.charging ? 'charging' : ''}"><div class="wx-battery-body"><div class="wx-battery-fill" style="width:${s.battery}%"></div>${s.charging ? '<span class="bolt">⚡</span>' : ''}</div><span>${s.battery}%</span></div>`;
+        const netHtml = s.network === 'wifi' ? `<div class="wx-wifi"><svg viewBox="0 0 30 23" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"><path class="${s.wifi >= 1 ? '' : 'off'}" d="M5.2 7.1 A17 17 0 0 1 24.8 7.1"/><path class="${s.wifi >= 2 ? '' : 'off'}" d="M8.7 12 A11 11 0 0 1 21.3 12"/><path class="${s.wifi >= 3 ? '' : 'off'}" d="M11.9 16.5 A5.5 5.5 0 0 1 18.1 16.5"/><circle class="${s.wifi >= 3 ? '' : 'off'}" cx="15" cy="21" r="1.9" fill="currentColor" stroke="none"/></svg></div>` : `<span class="wx-net">${s.network.toUpperCase()}</span>`;
+        const batteryHtml = `<div class="wx-battery ${s.charging ? 'charging' : ''}"><div class="wx-battery-body"><div class="wx-battery-fill" style="width:${s.battery}%"></div>${s.charging ? '<span class="bolt">⚡</span>' : ''}</div></div>`;
         const statusHtml = ex.includeStatusBar ? `<div class="wx-statusbar"><div class="wx-status-left"><span>${escapeHtml(s.time)}</span>${sigHtml}${netHtml}</div><div class="wx-status-right">${batteryHtml}</div></div>` : '';
         const earpieceIcon = `<span class="wx-earpiece" title="听筒模式"><svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg></span>`;
-        const navHtml = ex.includeNavBar ? `<div class="wx-navbar"><div class="wx-nav-left"><div class="wx-back"></div>${s.unread > 0 ? `<span class="wx-unread">${s.unread}</span>` : ''}</div><div class="wx-nav-center"><div class="wx-nav-title">${escapeHtml(s.title)}${s.earpiece ? earpieceIcon : ''}</div></div><div class="wx-nav-right"><div class="wx-dots"><i></i><i></i><i></i></div></div></div>` : '';
+        const navHtml = ex.includeNavBar ? `<div class="wx-navbar"><div class="wx-nav-left"><div class="wx-back"><svg viewBox="0 0 24 44" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 4 L6 22 L20 40"/></svg></div>${s.unread > 0 ? `<span class="wx-unread">${s.unread}</span>` : ''}</div><div class="wx-nav-center"><div class="wx-nav-title">${escapeHtml(s.title)}${s.earpiece ? earpieceIcon : ''}</div></div><div class="wx-nav-right"><div class="wx-more-btn"><i></i><i></i><i></i></div></div></div>` : '';
         const bgStyle = s.bg ? `background-image:url(${s.bg});background-size:cover;background-position:center;` : '';
         let msgsHtml;
         if (state.autoTime.enabled) {
@@ -2145,7 +2223,7 @@
           msgsHtml = state.messages.map(renderMessage).join('');
         }
         const chatHtml = `<div class="wx-chat" style="${bgStyle}">${msgsHtml}</div>`;
-        const voiceIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>`;
+        const voiceIcon = `<svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 15 h7 l9 -8 v26 l-9 -8 h-7 z" fill="currentColor" stroke="none"/><path d="M28 14 a10 10 0 0 1 0 12"/><path d="M31.5 10.5 a15 15 0 0 1 0 19"/></svg>`;
         const emojiIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>`;
         const plusIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>`;
         const inputBar = ex.includeInputBar ? `<div class="wx-inputbar"><div class="wx-input-btn voice">${voiceIcon}</div><div class="wx-input ${s.voice ? 'say' : ''}">${s.voice ? '按住 说话' : ''}</div><div class="wx-input-btn emoji">${emojiIcon}</div><div class="wx-input-btn more">${plusIcon}</div></div>` : '';
@@ -2166,12 +2244,18 @@
         });
         screen.querySelectorAll('.wx-msg-row[data-mid]').forEach(row => {
           const btn = row.querySelector('.wx-msg-del');
-          if (!btn) return;
-          btn.onclick = e => {
+          if (btn) btn.onclick = e => {
             e.stopPropagation();
             if (Date.now() < suppressUntil) return;
             state.messages = state.messages.filter(m => m.id !== row.dataset.mid);
             renderMsgList(); renderPreview();
+          };
+          const rec = row.querySelector('.wx-msg-rec');
+          if (rec) rec.onclick = e => {
+            e.stopPropagation();
+            if (Date.now() < suppressUntil) return;
+            const msg = state.messages.find(m => m.id === row.dataset.mid);
+            if (msg) { msg.recalled = !msg.recalled; renderMsgList(); renderPreview(); }
           };
         });
         const last = state.messages[state.messages.length - 1];
@@ -2186,13 +2270,15 @@
         const high = state.export.highRes;
         return { scale: high ? 2 : 1, width: 1080, height: 1920, suffix: high ? '2160x3840' : '1080x1920' };
       }
-      function cloneScreenForCapture() {
+      function cloneScreenForCapture(autoHeight) {
         const screen = $('wxScreen');
         const capture = document.createElement('div');
-        capture.className = screen.className;
-        capture.style.cssText = 'position:fixed;left:-9999px;top:0;width:1080px;height:1920px;overflow:hidden;z-index:-1;';
+        capture.className = screen.className + (autoHeight ? ' wx-long' : '');
+        capture.style.cssText = autoHeight
+          ? 'position:fixed;left:-9999px;top:0;width:1080px;height:auto;overflow:visible;z-index:-1;'
+          : 'position:fixed;left:-9999px;top:0;width:1080px;height:1920px;overflow:hidden;z-index:-1;';
         capture.innerHTML = screen.innerHTML;
-        capture.querySelectorAll('.wx-msg-del').forEach(b => b.remove());
+        capture.querySelectorAll('.wx-msg-del, .wx-msg-rec').forEach(b => b.remove());
         document.body.appendChild(capture);
         return capture;
       }
@@ -2234,6 +2320,40 @@
             saveAs(dataURLtoBlob(obj.image), 'wechat_screen_' + cfg.suffix + '.gif');
           });
         }).catch(e => { removeCapture(capture); alert('导出失败：' + e.message); });
+      }
+      async function exportLongImage() {
+        if (typeof html2canvas === 'undefined') return alert('html2canvas 未加载');
+        const scale = state.export.highRes ? 2 : 1;
+        const capture = cloneScreenForCapture(true);
+        await new Promise(r => setTimeout(r, 80));
+        const total = capture.scrollHeight;
+        if (total * scale > 30000) { removeCapture(capture); return alert('聊天内容过长，超出浏览器可导出高度上限，请删除部分消息后重试'); }
+        const MAXH = Math.floor(14000 / scale);
+        const chat = capture.querySelector('.wx-chat');
+        const chatTop = chat ? chat.offsetTop : 0;
+        const marks = [];
+        if (chat) chat.querySelectorAll(':scope > *').forEach(el => { const t = chatTop + el.offsetTop; if (t > 0) marks.push(t); });
+        const slices = [];
+        let sy = 0;
+        while (sy < total) {
+          let ey = Math.min(sy + MAXH, total);
+          if (ey < total) {
+            let best = -1;
+            for (const m of marks) { if (m > sy + 200 && m <= ey) best = m; }
+            if (best > 0) ey = best;
+          }
+          slices.push([sy, ey]);
+          sy = ey;
+        }
+        const out = document.createElement('canvas');
+        out.width = 1080 * scale; out.height = total * scale;
+        const ctx = out.getContext('2d');
+        for (const [y0, y1] of slices) {
+          const canvas = await html2canvas(capture, { scale, x: 0, y: y0, width: 1080, height: y1 - y0, backgroundColor: null, useCORS: true, logging: false });
+          ctx.drawImage(canvas, 0, y0 * scale);
+        }
+        removeCapture(capture);
+        out.toBlob(blob => saveAs(blob, 'wechat_long_' + (1080 * scale) + 'x' + (total * scale) + '.png'));
       }
 
       renderUsers(); renderMsgList(); renderPreview();
