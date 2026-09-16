@@ -342,7 +342,7 @@
     /* phone frame 1080x1920 screen canvas; preview wrapper 360x640, zoom/pan viewport */
     .wx-phone-wrap { width: 360px; height: 640px; position: relative; overflow: hidden; flex-shrink: 0; border-radius: 40px; background: transparent; cursor: grab; touch-action: none; }
     .wx-phone-wrap.dragging { cursor: grabbing; }
-    .wx-phone { width: 1080px; height: 1920px; position: absolute; top: 0; left: 0; background: #000; border-radius: 120px; box-shadow: 0 0 0 12px #1a1a1a, 0 0 0 14px #333, 0 60px 160px rgba(0,0,0,0.7); display: flex; flex-direction: column; overflow: hidden; transform-origin: 0 0; will-change: transform; }
+    .wx-phone { width: 1080px; height: 1920px; position: absolute; top: 0; left: 0; background: #000; border-radius: 110px; box-shadow: 0 0 0 8px #1a1a1a, 0 0 0 10px #2a2a2a, 0 40px 120px rgba(0,0,0,0.6); display: flex; flex-direction: column; overflow: hidden; transform-origin: 0 0; will-change: transform; }
     .wx-zoom-bar { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); display: flex; align-items: center; gap: 5px; background: rgba(8, 10, 26, 0.88); border: 1px solid rgba(0, 240, 255, 0.25); border-radius: 999px; padding: 5px 10px; z-index: 30; backdrop-filter: blur(6px); box-shadow: 0 6px 24px rgba(0,0,0,0.45); }
     .wx-zoom-bar button { width: 30px; height: 30px; border-radius: 50%; border: none; background: rgba(255,255,255,0.08); color: #fff; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.15s; }
     .wx-zoom-bar button:hover { background: linear-gradient(90deg, var(--accent2), var(--accent3)); box-shadow: 0 0 12px rgba(188,19,254,0.4); }
@@ -350,8 +350,8 @@
     .wx-zoom-bar .wx-zoom-wide { width: auto; border-radius: 999px; padding: 0 12px; font-size: 0.75rem; }
     .wx-zoom-hint { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); z-index: 30; font-size: 0.66rem; color: rgba(255,255,255,0.75); background: rgba(8,10,26,0.6); padding: 3px 10px; border-radius: 999px; pointer-events: none; opacity: 0; transition: 0.3s; white-space: nowrap; }
     .wx-phone-wrap:hover .wx-zoom-hint { opacity: 1; }
-    .wx-phone::before { content: ''; position: absolute; top: 24px; left: 50%; transform: translateX(-50%); width: 320px; height: 88px; background: #000; border-radius: 44px; z-index: 10; box-shadow: inset 0 0 0 2px #222; }
-    .wx-screen { width: 1080px; height: 1920px; background: #ededed; overflow: hidden; display: flex; flex-direction: column; color: #000; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif; position: relative; font-size: 34px; border-radius: 108px; }
+    .wx-phone::before { content: ''; position: absolute; top: 20px; left: 50%; transform: translateX(-50%); width: 280px; height: 80px; background: #000; border-radius: 40px; z-index: 10; box-shadow: inset 0 0 0 1.5px #1a1a1a; }
+    .wx-screen { width: 1080px; height: 1920px; background: #ededed; overflow: hidden; display: flex; flex-direction: column; color: #000; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif; position: relative; font-size: 34px; border-radius: 100px; }
     .wx-screen.dark { background: #111; color: #fff; }
 
     /* status bar */
@@ -455,34 +455,38 @@
 
     /* red packet message — 1:1 WeChat (图三) */
     .wx-rp { width: 720px; padding: 0; background: #f0a030; color: #fff; overflow: hidden; border-radius: 16px; }
-    .wx-rp::after { display: none; }
+    .wx-rp::after { content: ''; background: #f0a030; width: 22px; height: 22px; border-bottom-left-radius: 4px; top: 44px; left: -11px; position: absolute; transform: rotate(45deg); }
+    .wx-rp.opened { background: #f7e3bd; }
+    .wx-rp.opened::after { background: #f7e3bd; }
     .wx-rp-inner { display: flex; align-items: center; gap: 28px; padding: 40px 40px 20px; box-sizing: border-box; }
-    .wx-rp-icon { width: 72px; height: 88px; background: #e74c3c; border-radius: 8px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
-    .wx-rp-icon-text { font-size: 38px; color: #f0c040; font-weight: 700; }
+    .wx-rp-icon { width: 72px; height: 88px; background: #e74c3c; border-radius: 8px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.15); position: relative; overflow: hidden; }
+    .wx-rp-icon::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 40%; background: #c0392b; border-radius: 8px 8px 50% 50%; }
+    .wx-rp-icon-text { font-size: 38px; color: #f0c040; font-weight: 700; position: relative; z-index: 1; }
     .wx-rp-texts { display: flex; flex-direction: column; gap: 8px; overflow: hidden; flex: 1; }
     .wx-rp-remark { font-size: 44px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .wx-rp-bottom { border-top: 1px solid rgba(255, 255, 255, 0.3); padding: 16px 40px 24px; }
-    .wx-rp-label { font-size: 30px; color: rgba(255, 255, 255, 0.7); }
-    .wx-rp.opened { background: #f7e3bd; }
+    .wx-rp-label { font-size: 30px; color: rgba(255, 255, 255, 0.75); }
     .wx-rp.opened .wx-rp-icon { background: #d4a574; }
+    .wx-rp.opened .wx-rp-icon::before { background: #b8956a; }
     .wx-rp.opened .wx-rp-icon-text { color: #c4956a; }
     .wx-rp.opened .wx-rp-remark { color: #a68c62; }
     .wx-rp.opened .wx-rp-bottom { border-top-color: rgba(0,0,0,0.1); }
     .wx-rp.opened .wx-rp-label { color: #b29c79; }
 
     /* transfer message — 1:1 WeChat (图二) */
-    .wx-tr { width: 720px; padding: 0; background: #e8a84c; color: #fff; overflow: hidden; border-radius: 16px; }
-    .wx-tr::after { display: none; }
-    .wx-tr-accepted { background: #f0d5a8; }
+    .wx-tr { width: 720px; padding: 0; background: #f0a030; color: #fff; overflow: hidden; border-radius: 16px; }
+    .wx-tr::after { content: ''; background: #f0a030; width: 22px; height: 22px; border-bottom-left-radius: 4px; top: 44px; left: -11px; position: absolute; transform: rotate(45deg); }
+    .wx-tr-accepted { background: #f5e6d0; }
+    .wx-tr-accepted::after { background: #f5e6d0; }
     .wx-tr-inner { display: flex; align-items: center; padding: 36px 40px 16px; box-sizing: border-box; }
     .wx-tr-icon { width: 80px; height: 80px; border-radius: 50%; background: #fff; flex-shrink: 0; display: flex; align-items: center; justify-content: center; margin-right: 28px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
     .wx-tr-icon svg { width: 44px; height: 44px; }
     .wx-tr-texts { display: flex; flex-direction: column; }
     .wx-tr-amt { font-size: 52px; font-weight: 600; color: #fff; line-height: 1.1; }
-    .wx-tr-status-text { font-size: 36px; color: rgba(255, 255, 255, 0.85); margin-top: 6px; }
+    .wx-tr-status-text { font-size: 36px; color: rgba(255, 255, 255, 0.9); margin-top: 6px; }
     .wx-tr-accepted .wx-tr-amt, .wx-tr-accepted .wx-tr-status-text { color: #fff; }
-    .wx-tr-label { padding: 12px 40px 24px; font-size: 30px; color: rgba(255, 255, 255, 0.7); }
-    .wx-tr-accepted .wx-tr-label { color: rgba(255, 255, 255, 0.6); }
+    .wx-tr-label { padding: 12px 40px 24px; font-size: 30px; color: rgba(255, 255, 255, 0.75); }
+    .wx-tr-accepted .wx-tr-label { color: rgba(255, 255, 255, 0.65); }
 
     /* recall notice */
     .wx-recall-notice { text-align: center; color: #909090; font-size: 30px; margin-bottom: 40px; }
@@ -1956,7 +1960,13 @@
       $('wxZoomOut').onclick = () => zoomBy(0.8);
       $('wxZoomFit').onclick = () => { view.scale = FIT_SCALE; view.x = 0; view.y = 0; applyView(); };
       $('wxZoomFull').onclick = () => { view.scale = 1; view.x = (360 - 1080) / 2; view.y = (640 - 1920) / 2; applyView(); };
-      phoneWrap.addEventListener('wheel', e => { e.preventDefault(); zoomBy(e.deltaY < 0 ? 1.15 : 1 / 1.15); }, { passive: false });
+      phoneWrap.addEventListener('wheel', e => {
+        e.preventDefault();
+        const chat = phone.querySelector('.wx-chat');
+        if (chat) {
+          chat.scrollTop += e.deltaY * (1 / view.scale);
+        }
+      }, { passive: false });
       phoneWrap.addEventListener('pointerdown', e => {
         if (e.target.closest('.wx-zoom-bar')) return;
         dragging = true; moved = false;
